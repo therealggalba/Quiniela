@@ -364,8 +364,8 @@ CREATE TABLE IF NOT EXISTS public.quiniela_columnas (
     UNIQUE (jornada_id, player_id)
 );
 
--- RLS: lectura pública, escritura solo para el creador autenticado por Supabase Auth.
--- Sustituye <CREATOR_UUID> por el uid del usuario admin (auth.users) una vez creado.
+-- RLS: lectura pública, escritura solo para el creador autenticado por Supabase Auth
+-- (mismo usuario que ya usas en el resto del ecosistema, uid e997ceee-be4b-4498-ab75-1947e042d5e1).
 ALTER TABLE public.quiniela_players ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quiniela_jornadas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quiniela_partidos ENABLE ROW LEVEL SECURITY;
@@ -377,13 +377,13 @@ CREATE POLICY "Lectura pública" ON public.quiniela_partidos FOR SELECT USING (t
 CREATE POLICY "Lectura pública" ON public.quiniela_columnas FOR SELECT USING (true);
 
 CREATE POLICY "Escritura solo creador" ON public.quiniela_players FOR ALL
-  USING (auth.uid() = '<CREATOR_UUID>') WITH CHECK (auth.uid() = '<CREATOR_UUID>');
+  USING (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1') WITH CHECK (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1');
 CREATE POLICY "Escritura solo creador" ON public.quiniela_jornadas FOR ALL
-  USING (auth.uid() = '<CREATOR_UUID>') WITH CHECK (auth.uid() = '<CREATOR_UUID>');
+  USING (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1') WITH CHECK (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1');
 CREATE POLICY "Escritura solo creador" ON public.quiniela_partidos FOR ALL
-  USING (auth.uid() = '<CREATOR_UUID>') WITH CHECK (auth.uid() = '<CREATOR_UUID>');
+  USING (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1') WITH CHECK (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1');
 CREATE POLICY "Escritura solo creador" ON public.quiniela_columnas FOR ALL
-  USING (auth.uid() = '<CREATOR_UUID>') WITH CHECK (auth.uid() = '<CREATOR_UUID>');
+  USING (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1') WITH CHECK (auth.uid() = 'e997ceee-be4b-4498-ab75-1947e042d5e1');
 
 -- La función serverless de sync en vivo (api/quiniela-live.ts) escribe con la
 -- service_role key, que salta RLS por diseño de Supabase, así que no necesita
