@@ -1,5 +1,5 @@
 import { supabase } from './lib/supabaseClient';
-import type { Columna, EstadoJornada, Jornada, Partido, PlenoAl15Valor, Player } from './domain/quiniela';
+import type { Columna, EstadoJornada, Jornada, Partido, Player } from './domain/quiniela';
 
 const LOCAL_STORAGE_KEY = 'quiniela_state_v1';
 
@@ -43,18 +43,20 @@ function seedDemoState(): LocalState {
     { id: 'p2', name: 'Marta', createdAt: now },
     { id: 'p3', name: 'Iván', createdAt: now },
   ];
-  const jornadaLive: Jornada = { id: 'j2', numero: 2, estado: 'en_juego', createdAt: now, plenoAl15Local: null, plenoAl15Visitante: null };
-  const jornadaClosed: Jornada = { id: 'j1', numero: 1, estado: 'cerrada', createdAt: now, plenoAl15Local: '2', plenoAl15Visitante: '1' };
+  const jornadaLive: Jornada = { id: 'j2', numero: 2, estado: 'en_juego', createdAt: now };
+  const jornadaClosed: Jornada = { id: 'j1', numero: 1, estado: 'cerrada', createdAt: now };
 
   const partidosLive: Partido[] = [
-    { id: 'm1', jornadaId: 'j2', orden: 1, competicion: 'laliga', equipoLocal: 'Real Madrid', equipoVisitante: 'Betis', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 2, golesVisitante: 0, esPlenoAl15: false, updatedAt: now },
-    { id: 'm2', jornadaId: 'j2', orden: 2, competicion: 'laliga', equipoLocal: 'Barcelona', equipoVisitante: 'Sevilla', apiFixtureId: null, kickoffAt: now, estado: 'en_juego', golesLocal: 1, golesVisitante: 1, esPlenoAl15: false, updatedAt: now },
-    { id: 'm3', jornadaId: 'j2', orden: 3, competicion: 'segunda', equipoLocal: 'Racing', equipoVisitante: 'Deportivo', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, esPlenoAl15: false, updatedAt: now },
-    { id: 'm4', jornadaId: 'j2', orden: 4, competicion: 'ligaf', equipoLocal: 'Atlético', equipoVisitante: 'Levante', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, esPlenoAl15: false, updatedAt: now },
+    { id: 'm1', jornadaId: 'j2', orden: 1, competicion: 'laliga', equipoLocal: 'Real Madrid', equipoVisitante: 'Betis', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 2, golesVisitante: 0, esPlenoAl15: false, plenoAl15Local: null, plenoAl15Visitante: null, updatedAt: now },
+    { id: 'm2', jornadaId: 'j2', orden: 2, competicion: 'laliga', equipoLocal: 'Barcelona', equipoVisitante: 'Sevilla', apiFixtureId: null, kickoffAt: now, estado: 'en_juego', golesLocal: 1, golesVisitante: 1, esPlenoAl15: false, plenoAl15Local: null, plenoAl15Visitante: null, updatedAt: now },
+    { id: 'm3', jornadaId: 'j2', orden: 3, competicion: 'segunda', equipoLocal: 'Racing', equipoVisitante: 'Deportivo', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, esPlenoAl15: false, plenoAl15Local: null, plenoAl15Visitante: null, updatedAt: now },
+    { id: 'm4', jornadaId: 'j2', orden: 4, competicion: 'ligaf', equipoLocal: 'Atlético', equipoVisitante: 'Levante', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, esPlenoAl15: false, plenoAl15Local: null, plenoAl15Visitante: null, updatedAt: now },
   ];
   const partidosClosed: Partido[] = [
-    { id: 'm5', jornadaId: 'j1', orden: 1, competicion: 'laliga', equipoLocal: 'Valencia', equipoVisitante: 'Villarreal', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 1, golesVisitante: 1, esPlenoAl15: false, updatedAt: now },
-    { id: 'm6', jornadaId: 'j1', orden: 2, competicion: 'segunda', equipoLocal: 'Málaga', equipoVisitante: 'Elche', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 0, golesVisitante: 2, esPlenoAl15: false, updatedAt: now },
+    { id: 'm5', jornadaId: 'j1', orden: 1, competicion: 'laliga', equipoLocal: 'Valencia', equipoVisitante: 'Villarreal', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 1, golesVisitante: 1, esPlenoAl15: false, plenoAl15Local: null, plenoAl15Visitante: null, updatedAt: now },
+    { id: 'm6', jornadaId: 'j1', orden: 2, competicion: 'segunda', equipoLocal: 'Málaga', equipoVisitante: 'Elche', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 0, golesVisitante: 2, esPlenoAl15: false, plenoAl15Local: null, plenoAl15Visitante: null, updatedAt: now },
+    { id: 'm7', jornadaId: 'j1', orden: 3, competicion: 'laliga', equipoLocal: 'Atlético', equipoVisitante: 'Real Madrid', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: null, golesVisitante: null, esPlenoAl15: true, plenoAl15Local: '2', plenoAl15Visitante: '1', updatedAt: now },
+    { id: 'm8', jornadaId: 'j1', orden: 4, competicion: 'laliga', equipoLocal: 'Atlético', equipoVisitante: 'Real Madrid', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: null, golesVisitante: null, esPlenoAl15: true, plenoAl15Local: 'M', plenoAl15Visitante: '0', updatedAt: now },
   ];
 
   const columnas: Columna[] = [
@@ -81,14 +83,7 @@ function rowToPlayer(row: any): Player {
 }
 
 function rowToJornada(row: any): Jornada {
-  return {
-    id: row.id,
-    numero: row.numero,
-    estado: row.estado,
-    createdAt: row.created_at,
-    plenoAl15Local: row.pleno_al_15_local ?? null,
-    plenoAl15Visitante: row.pleno_al_15_visitante ?? null,
-  };
+  return { id: row.id, numero: row.numero, estado: row.estado, createdAt: row.created_at };
 }
 
 function rowToPartido(row: any): Partido {
@@ -105,6 +100,8 @@ function rowToPartido(row: any): Partido {
     golesLocal: row.goles_local,
     golesVisitante: row.goles_visitante,
     esPlenoAl15: row.es_pleno_al_15 ?? false,
+    plenoAl15Local: row.pleno_al_15_local ?? null,
+    plenoAl15Visitante: row.pleno_al_15_visitante ?? null,
     updatedAt: row.updated_at,
   };
 }
@@ -161,14 +158,7 @@ export const dbService = {
   async createJornada(numero: number): Promise<Jornada> {
     if (!supabase) {
       const state = getLocalState();
-      const jornada: Jornada = {
-        id: crypto.randomUUID(),
-        numero,
-        estado: 'abierta',
-        createdAt: new Date().toISOString(),
-        plenoAl15Local: null,
-        plenoAl15Visitante: null,
-      };
+      const jornada: Jornada = { id: crypto.randomUUID(), numero, estado: 'abierta', createdAt: new Date().toISOString() };
       state.jornadas.push(jornada);
       saveLocalState(state);
       return jornada;
@@ -187,24 +177,6 @@ export const dbService = {
       return;
     }
     const { error } = await supabase.from('quiniela_jornadas').update({ estado }).eq('id', id);
-    if (error) throw error;
-  },
-
-  async setPlenoAl15(id: string, local: PlenoAl15Valor | null, visitante: PlenoAl15Valor | null): Promise<void> {
-    if (!supabase) {
-      const state = getLocalState();
-      const jornada = state.jornadas.find((j) => j.id === id);
-      if (jornada) {
-        jornada.plenoAl15Local = local;
-        jornada.plenoAl15Visitante = visitante;
-      }
-      saveLocalState(state);
-      return;
-    }
-    const { error } = await supabase
-      .from('quiniela_jornadas')
-      .update({ pleno_al_15_local: local, pleno_al_15_visitante: visitante })
-      .eq('id', id);
     if (error) throw error;
   },
 
@@ -260,6 +232,8 @@ export const dbService = {
         goles_local: input.golesLocal,
         goles_visitante: input.golesVisitante,
         es_pleno_al_15: input.esPlenoAl15,
+        pleno_al_15_local: input.plenoAl15Local,
+        pleno_al_15_visitante: input.plenoAl15Visitante,
       })
       .select()
       .single();
@@ -286,6 +260,8 @@ export const dbService = {
     if (patch.golesLocal !== undefined) dbPatch.goles_local = patch.golesLocal;
     if (patch.golesVisitante !== undefined) dbPatch.goles_visitante = patch.golesVisitante;
     if (patch.esPlenoAl15 !== undefined) dbPatch.es_pleno_al_15 = patch.esPlenoAl15;
+    if (patch.plenoAl15Local !== undefined) dbPatch.pleno_al_15_local = patch.plenoAl15Local;
+    if (patch.plenoAl15Visitante !== undefined) dbPatch.pleno_al_15_visitante = patch.plenoAl15Visitante;
     const { error } = await supabase.from('quiniela_partidos').update(dbPatch).eq('id', id);
     if (error) throw error;
   },
@@ -374,28 +350,23 @@ CREATE TABLE IF NOT EXISTS public.quiniela_players (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Jornadas. pleno_al_15_local/visitante: resultado oficial del Pleno al 15
--- en escala 0/1/2/M (M = 3 o más goles), el mismo para toda la jornada
--- aunque haya varios partidos marcados como Pleno al 15 (mismo
--- enfrentamiento duplicado para desempates con más de 8 columnas) — se
--- rellena una sola vez aquí, no por partido ni por jugador.
+-- Jornadas
 CREATE TABLE IF NOT EXISTS public.quiniela_jornadas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     numero INTEGER NOT NULL,
     estado TEXT NOT NULL DEFAULT 'abierta' CHECK (estado IN ('abierta', 'en_juego', 'cerrada')),
-    pleno_al_15_local TEXT CHECK (pleno_al_15_local IN ('0', '1', '2', 'M')),
-    pleno_al_15_visitante TEXT CHECK (pleno_al_15_visitante IN ('0', '1', '2', 'M')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
-
--- Migración idempotente por si la tabla ya existía sin estas columnas.
-ALTER TABLE public.quiniela_jornadas ADD COLUMN IF NOT EXISTS pleno_al_15_local TEXT CHECK (pleno_al_15_local IN ('0', '1', '2', 'M'));
-ALTER TABLE public.quiniela_jornadas ADD COLUMN IF NOT EXISTS pleno_al_15_visitante TEXT CHECK (pleno_al_15_visitante IN ('0', '1', '2', 'M'));
 
 -- Partidos de cada jornada (1ª, 2ª y Liga F mezclados). "orden" fija el
 -- número de partido dentro de la jornada (1-7 Primera, 8-10 Segunda,
 -- 11-14 Liga F, como en la quiniela oficial) y es lo que decide el orden
 -- de aparición en pantalla, no la hora de inicio.
+-- pleno_al_15_local/visitante: escala oficial 0/1/2/M (M = 3+ goles). Con
+-- más de 8 columnas puede haber varios partidos es_pleno_al_15 en la misma
+-- jornada (mismo enfrentamiento real duplicado: mismo equipo/hora), pero
+-- CADA UNO tiene su propio resultado independiente — no cuentan para la
+-- estadística de aciertos de ningún jugador.
 CREATE TABLE IF NOT EXISTS public.quiniela_partidos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     jornada_id UUID NOT NULL REFERENCES public.quiniela_jornadas(id) ON DELETE CASCADE,
@@ -408,15 +379,17 @@ CREATE TABLE IF NOT EXISTS public.quiniela_partidos (
     estado TEXT NOT NULL DEFAULT 'programado' CHECK (estado IN ('programado', 'en_juego', 'finalizado')),
     goles_local INTEGER,
     goles_visitante INTEGER,
-    -- Pleno al 15: el pronóstico de este partido es un marcador exacto, no
-    -- un signo 1X2 (con más de 8 columnas puede haber varios en la misma jornada).
     es_pleno_al_15 BOOLEAN NOT NULL DEFAULT false,
+    pleno_al_15_local TEXT CHECK (pleno_al_15_local IN ('0', '1', '2', 'M')),
+    pleno_al_15_visitante TEXT CHECK (pleno_al_15_visitante IN ('0', '1', '2', 'M')),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Migración idempotente por si la tabla ya existía sin estas columnas.
 ALTER TABLE public.quiniela_partidos ADD COLUMN IF NOT EXISTS orden INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE public.quiniela_partidos ADD COLUMN IF NOT EXISTS es_pleno_al_15 BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.quiniela_partidos ADD COLUMN IF NOT EXISTS pleno_al_15_local TEXT CHECK (pleno_al_15_local IN ('0', '1', '2', 'M'));
+ALTER TABLE public.quiniela_partidos ADD COLUMN IF NOT EXISTS pleno_al_15_visitante TEXT CHECK (pleno_al_15_visitante IN ('0', '1', '2', 'M'));
 
 -- Columna (pronóstico 1X2) de un jugador para una jornada
 CREATE TABLE IF NOT EXISTS public.quiniela_columnas (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { contarAciertos, resultadoPick, type Columna, type Partido, type PlenoAl15Valor, type Player } from '../domain/quiniela';
+import { contarAciertos, resultadoPick, type Columna, type Partido, type Player } from '../domain/quiniela';
 import { TeamBadge } from './TeamBadge';
 
 interface Props {
@@ -10,9 +10,6 @@ interface Props {
   onToggleFavorite: (playerId: string) => void;
   /** Posición de cada jugador en la clasificación general (no en esta jornada). */
   posiciones: Map<string, number>;
-  /** Resultado oficial del Pleno al 15 de la jornada (escala 0/1/2/M), el mismo para todos los partidos marcados. */
-  plenoAl15Local: PlenoAl15Valor | null;
-  plenoAl15Visitante: PlenoAl15Valor | null;
 }
 
 /**
@@ -22,17 +19,13 @@ interface Props {
  * mismo en ambos lados para que siempre queden alineadas, sin importar la
  * longitud del nombre del equipo. Pensada para caber en pantalla con el
  * mínimo scroll posible: partidos a una sola línea, hora omitida.
+ *
+ * Los partidos de Pleno al 15 (puede haber varios: mismo enfrentamiento
+ * real duplicado, un resultado 0/1/2/M independiente cada uno) se funden
+ * aquí en una única fila con todos sus resultados juntos, para no repetir
+ * el mismo partido varias veces en pantalla.
  */
-export function QuinielaTable({
-  players,
-  columnas,
-  partidos,
-  favoritePlayerId,
-  onToggleFavorite,
-  posiciones,
-  plenoAl15Local,
-  plenoAl15Visitante,
-}: Props) {
+export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, onToggleFavorite, posiciones }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrolledToFavorite = useRef(false);
@@ -63,10 +56,14 @@ export function QuinielaTable({
     return <div className="empty-state">Todavía no hay partidos en esta jornada.</div>;
   }
 
+  const partidosNormales = partidos.filter((p) => !p.esPlenoAl15);
+  const partidosPlenos = partidos.filter((p) => p.esPlenoAl15);
+  const plenoRef = partidosPlenos[0];
+
   const currentPlayer = players[activeIndex];
   const currentColumna = columnas.find((c) => c.playerId === currentPlayer.id);
   const aciertos = currentColumna ? contarAciertos(currentColumna, partidos) : 0;
-  const resueltos = partidos.filter((p) => p.estado === 'finalizado' && !p.esPlenoAl15).length;
+  const resueltos = partidosNormales.filter((p) => p.estado === 'finalizado').length;
   const isFavorite = favoritePlayerId === currentPlayer.id;
   const posicion = posiciones.get(currentPlayer.id);
 
@@ -95,8 +92,8 @@ export function QuinielaTable({
 
       <div className="qt__body">
         <div className="qt__matches">
-          {partidos.map((partido) => (
-            <div key={partido.id} className={`qt-match-cell qt-match-cell--${partido.competicion}${partido.esPlenoAl15 ? ' qt-match-cell--pleno' : ''}`}>
+          {partidosNormales.map((partido) => (
+            <div key={partido.id} className={`qt-match-cell qt-match-cell--${partido.competicion}`}>
               <TeamBadge competicion={partido.competicion} team={partido.equipoLocal} />
               <span className="qt-match-cell__names">
                 {partido.equipoLocal} – {partido.equipoVisitante}
@@ -104,14 +101,23 @@ export function QuinielaTable({
               <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
               <span className={`qt-match-cell__marcador ${partido.estado === 'en_juego' ? 'live' : ''}`}>
                 {partido.estado === 'en_juego' && <span className="live-dot" />}
-                {partido.esPlenoAl15
-                  ? `${plenoAl15Local ?? '?'}-${plenoAl15Visitante ?? '?'}`
-                  : partido.estado === 'programado'
-                    ? '–'
-                    : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
+                {partido.estado === 'programado' ? '–' : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
               </span>
             </div>
           ))}
+
+          {plenoRef && (
+            <div className="qt-match-cell qt-match-cell--pleno">
+              <TeamBadge competicion={plenoRef.competicion} team={plenoRef.equipoLocal} />
+              <span className="qt-match-cell__names">
+                {plenoRef.equipoLocal} – {plenoRef.equipoVisitante}
+              </span>
+              <TeamBadge competicion={plenoRef.competicion} team={plenoRef.equipoVisitante} />
+              <span className="qt-match-cell__marcador">
+                {partidosPlenos.map((p) => `${p.plenoAl15Local ?? '?'}-${p.plenoAl15Visitante ?? '?'}`).join(' · ')}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="qt__picks" ref={scrollRef} onScroll={handleScroll}>
@@ -119,14 +125,7 @@ export function QuinielaTable({
             const columna = columnas.find((c) => c.playerId === player.id);
             return (
               <div key={player.id} className="qt-picks-page">
-                {partidos.map((partido) => {
-                  if (partido.esPlenoAl15) {
-                    return (
-                      <div key={partido.id} className="qt-pick-cell">
-                        <span className="pick-badge pick-badge--muted">—</span>
-                      </div>
-                    );
-                  }
+                {partidosNormales.map((partido) => {
                   const pick = columna?.picks[partido.id];
                   const acierto = resultadoPick(partido, pick);
                   const badgeClass = acierto === true ? 'hit' : acierto === false ? 'miss' : '';
@@ -136,6 +135,11 @@ export function QuinielaTable({
                     </div>
                   );
                 })}
+                {plenoRef && (
+                  <div className="qt-pick-cell">
+                    <span className="pick-badge pick-badge--muted">—</span>
+                  </div>
+                )}
               </div>
             );
           })}

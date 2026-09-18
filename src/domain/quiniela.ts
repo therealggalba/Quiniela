@@ -38,14 +38,6 @@ export interface Jornada {
   numero: number;
   estado: EstadoJornada;
   createdAt: string;
-  /**
-   * Resultado oficial del Pleno al 15 de esta jornada (escala 0/1/2/M), el
-   * mismo para toda la jornada aunque haya varios partidos marcados como
-   * Pleno al 15 (son el mismo enfrentamiento duplicado para desempates con
-   * más de 8 columnas) — se rellena una sola vez, no por partido.
-   */
-  plenoAl15Local: PlenoAl15Valor | null;
-  plenoAl15Visitante: PlenoAl15Valor | null;
 }
 
 export interface Partido {
@@ -60,8 +52,17 @@ export interface Partido {
   estado: EstadoPartido;
   golesLocal: number | null;
   golesVisitante: number | null;
-  /** Pleno al 15: el pronóstico es un marcador exacto, no un signo 1X2. */
+  /**
+   * Marca este partido como (uno de los) partido(s) de Pleno al 15. Con más
+   * de 8 columnas puede haber varios para la misma jornada — todos son el
+   * mismo enfrentamiento real duplicado (mismo equipo/hora), pero CADA UNO
+   * tiene su propio resultado independiente en escala 0/1/2/M (M = 3+
+   * goles). En pantalla se funden en una sola fila con varios resultados.
+   * No cuentan para la estadística de aciertos de ningún jugador.
+   */
   esPlenoAl15: boolean;
+  plenoAl15Local: PlenoAl15Valor | null;
+  plenoAl15Visitante: PlenoAl15Valor | null;
   updatedAt: string;
 }
 
@@ -183,4 +184,28 @@ export function computeClasificacion(
   });
 
   return rows;
+}
+
+/** Máximo de aciertos conseguido en cada jornada (para el listado del histórico). */
+export function computeMaxAciertosPorJornada(
+  jornadas: Jornada[],
+  columnas: Columna[],
+  partidos: Partido[],
+): Map<string, number> {
+  const partidosPorJornada = new Map<string, Partido[]>();
+  for (const partido of partidos) {
+    const lista = partidosPorJornada.get(partido.jornadaId) ?? [];
+    lista.push(partido);
+    partidosPorJornada.set(partido.jornadaId, lista);
+  }
+
+  const resultado = new Map<string, number>();
+  for (const jornada of jornadas) {
+    const partidosJornada = partidosPorJornada.get(jornada.id) ?? [];
+    const columnasJornada = columnas.filter((c) => c.jornadaId === jornada.id);
+    if (columnasJornada.length === 0) continue;
+    const max = Math.max(...columnasJornada.map((c) => contarAciertos(c, partidosJornada)));
+    resultado.set(jornada.id, max);
+  }
+  return resultado;
 }

@@ -23,7 +23,7 @@ export function Live() {
   const [columnas, setColumnas] = useState<Columna[]>([]);
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [loading, setLoading] = useState(true);
-  const posiciones = useClasificacionPositions(players, jornadas);
+  const { posiciones } = useClasificacionPositions(players, jornadas);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,8 +86,6 @@ export function Live() {
         favoritePlayerId={favoritePlayerId}
         onToggleFavorite={toggleFavorite}
         posiciones={posiciones}
-        plenoAl15Local={jornada.plenoAl15Local}
-        plenoAl15Visitante={jornada.plenoAl15Visitante}
       />
     </div>
   );

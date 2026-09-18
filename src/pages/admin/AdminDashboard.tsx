@@ -163,14 +163,6 @@ export function AdminDashboard() {
     }, `Jornada marcada como ${ESTADO_JORNADA_LABEL[estado].toLowerCase()}`);
   }
 
-  async function handleSetPlenoAl15(local: PlenoAl15Valor | null, visitante: PlenoAl15Valor | null) {
-    if (!selectedJornadaId) return;
-    await runAction(async () => {
-      await dbService.setPlenoAl15(selectedJornadaId, local, visitante);
-      await refreshJornadas();
-    }, 'Pleno al 15 guardado');
-  }
-
   async function handleAddPartido() {
     if (!selectedJornadaId) return;
     if (!newPartido.equipoLocal.trim() || !newPartido.equipoVisitante.trim() || !newPartido.kickoffAt) {
@@ -190,10 +182,45 @@ export function AdminDashboard() {
         golesLocal: null,
         golesVisitante: null,
         esPlenoAl15: newPartido.esPlenoAl15,
+        plenoAl15Local: null,
+        plenoAl15Visitante: null,
       });
       setNewPartido((prev) => ({ ...prev, equipoLocal: '', equipoVisitante: '', kickoffAt: '', apiFixtureId: '', esPlenoAl15: false }));
       await refreshJornadaData(selectedJornadaId);
     }, 'Partido añadido');
+  }
+
+  /**
+   * Al marcar un partido nuevo como Pleno al 15, si ya hay otro en esta
+   * jornada se copian equipos/competición/hora del primero — es el mismo
+   * enfrentamiento real duplicado, así no hay que volver a teclearlo. El
+   * resultado (0/1/2/M) sí es independiente por partido y se fija después,
+   * ya creado, en su propia fila.
+   */
+  function handleTogglePlenoAl15(checked: boolean) {
+    if (checked) {
+      const existente = partidos.find((p) => p.esPlenoAl15);
+      if (existente) {
+        setNewPartido((prev) => ({
+          ...prev,
+          esPlenoAl15: true,
+          competicion: existente.competicion,
+          equipoLocal: existente.equipoLocal,
+          equipoVisitante: existente.equipoVisitante,
+          kickoffAt: existente.kickoffAt.slice(0, 16),
+        }));
+        return;
+      }
+    }
+    setNewPartido((prev) => ({ ...prev, esPlenoAl15: checked }));
+  }
+
+  async function handleSetPlenoResultado(partido: Partido, local: PlenoAl15Valor, visitante: PlenoAl15Valor) {
+    if (!selectedJornadaId) return;
+    await runAction(async () => {
+      await dbService.updatePartido(partido.id, { plenoAl15Local: local, plenoAl15Visitante: visitante });
+      await refreshJornadaData(selectedJornadaId);
+    }, 'Resultado de Pleno al 15 guardado');
   }
 
   async function handleDeletePartido(id: string) {
@@ -320,42 +347,6 @@ export function AdminDashboard() {
             ))}
           </div>
         )}
-
-        {selectedJornada && (
-          <div style={{ marginTop: '0.75rem' }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: '0 0 0.4rem' }}>
-              Pleno al 15 (resultado único de la jornada, escala oficial 0-1-2-M):
-            </p>
-            <div className="form-row" style={{ alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem' }}>Local</span>
-              <div className="segmented">
-                {PLENO_AL_15_OPCIONES.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    className={selectedJornada.plenoAl15Local === v ? 'active' : ''}
-                    onClick={() => handleSetPlenoAl15(v, selectedJornada.plenoAl15Visitante)}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-              <span style={{ fontSize: '0.8rem' }}>Visitante</span>
-              <div className="segmented">
-                {PLENO_AL_15_OPCIONES.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    className={selectedJornada.plenoAl15Visitante === v ? 'active' : ''}
-                    onClick={() => handleSetPlenoAl15(selectedJornada.plenoAl15Local, v)}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </section>
 
       {selectedJornada && (
@@ -410,9 +401,9 @@ export function AdminDashboard() {
                 <input
                   type="checkbox"
                   checked={newPartido.esPlenoAl15}
-                  onChange={(e) => setNewPartido({ ...newPartido, esPlenoAl15: e.target.checked })}
+                  onChange={(e) => handleTogglePlenoAl15(e.target.checked)}
                 />
-                Es el partido de Pleno al 15 (el resultado se fija arriba, en Jornadas)
+                Es (otro) partido de Pleno al 15{partidos.some((p) => p.esPlenoAl15) ? ' — equipos y hora copiados del ya creado' : ''}
               </label>
               <button type="button" className="btn btn-primary" onClick={handleAddPartido}>
                 Añadir partido #{partidos.length + 1}
@@ -430,25 +421,56 @@ export function AdminDashboard() {
                     Eliminar
                   </button>
                 </div>
-                <div className="form-row">
-                  <input
-                    type="number"
-                    placeholder="Goles local"
-                    defaultValue={partido.golesLocal ?? ''}
-                    onBlur={(e) => handleResultado(partido, e.target.value, String(partido.golesVisitante ?? ''))}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Goles visitante"
-                    defaultValue={partido.golesVisitante ?? ''}
-                    onBlur={(e) => handleResultado(partido, String(partido.golesLocal ?? ''), e.target.value)}
-                  />
-                  <select value={partido.estado} onChange={(e) => handleEstadoPartido(partido, e.target.value as EstadoPartido)}>
-                    <option value="programado">Programado</option>
-                    <option value="en_juego">En juego</option>
-                    <option value="finalizado">Finalizado</option>
-                  </select>
-                </div>
+                {partido.esPlenoAl15 ? (
+                  <div className="form-row" style={{ alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem' }}>Local</span>
+                    <div className="segmented">
+                      {PLENO_AL_15_OPCIONES.map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          className={partido.plenoAl15Local === v ? 'active' : ''}
+                          onClick={() => handleSetPlenoResultado(partido, v, partido.plenoAl15Visitante ?? '0')}
+                        >
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                    <span style={{ fontSize: '0.8rem' }}>Visitante</span>
+                    <div className="segmented">
+                      {PLENO_AL_15_OPCIONES.map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          className={partido.plenoAl15Visitante === v ? 'active' : ''}
+                          onClick={() => handleSetPlenoResultado(partido, partido.plenoAl15Local ?? '0', v)}
+                        >
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="form-row">
+                    <input
+                      type="number"
+                      placeholder="Goles local"
+                      defaultValue={partido.golesLocal ?? ''}
+                      onBlur={(e) => handleResultado(partido, e.target.value, String(partido.golesVisitante ?? ''))}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Goles visitante"
+                      defaultValue={partido.golesVisitante ?? ''}
+                      onBlur={(e) => handleResultado(partido, String(partido.golesLocal ?? ''), e.target.value)}
+                    />
+                    <select value={partido.estado} onChange={(e) => handleEstadoPartido(partido, e.target.value as EstadoPartido)}>
+                      <option value="programado">Programado</option>
+                      <option value="en_juego">En juego</option>
+                      <option value="finalizado">Finalizado</option>
+                    </select>
+                  </div>
+                )}
               </div>
             ))}
           </section>
@@ -470,7 +492,7 @@ export function AdminDashboard() {
 
             {selectedPlayerId && partidos.some((p) => p.esPlenoAl15) && (
               <p className="empty-state" style={{ padding: '0.5rem 0' }}>
-                El Pleno al 15 es el mismo resultado para todos — se fija una vez arriba, en "Jornadas", no aquí.
+                El Pleno al 15 no lo pronostica cada jugador — su resultado se fija arriba, en "Partidos".
               </p>
             )}
 

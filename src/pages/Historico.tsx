@@ -13,7 +13,7 @@ export function Historico() {
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [columnas, setColumnas] = useState<Columna[]>([]);
   const [loading, setLoading] = useState(true);
-  const posiciones = useClasificacionPositions(players, jornadasCerradas);
+  const { posiciones, maxAciertosPorJornada } = useClasificacionPositions(players, jornadasCerradas);
 
   useEffect(() => {
     async function load() {
@@ -62,8 +62,6 @@ export function Historico() {
           favoritePlayerId={favoritePlayerId}
           onToggleFavorite={toggleFavorite}
           posiciones={posiciones}
-          plenoAl15Local={seleccionada.plenoAl15Local}
-          plenoAl15Visitante={seleccionada.plenoAl15Visitante}
         />
       </div>
     );
@@ -74,18 +72,24 @@ export function Historico() {
       {jornadasCerradas.length === 0 ? (
         <div className="empty-state">Todavía no hay jornadas cerradas.</div>
       ) : (
-        jornadasCerradas.map((jornada) => (
-          <button
-            key={jornada.id}
-            type="button"
-            className="list-item"
-            style={{ width: '100%', border: '1px solid var(--border)', cursor: 'pointer' }}
-            onClick={() => setSeleccionada(jornada)}
-          >
-            <span>Jornada {jornada.numero}</span>
-            <span className="badge-estado cerrada">cerrada</span>
-          </button>
-        ))
+        jornadasCerradas.map((jornada) => {
+          const max = maxAciertosPorJornada.get(jornada.id);
+          return (
+            <button
+              key={jornada.id}
+              type="button"
+              className="list-item"
+              style={{ width: '100%', border: '1px solid var(--border)', cursor: 'pointer' }}
+              onClick={() => setSeleccionada(jornada)}
+            >
+              <span>Jornada {jornada.numero}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {max !== undefined && <span className="qt-stat-pill qt-stat-pill--aciertos">{max} aciertos</span>}
+                <span className="badge-estado cerrada">cerrada</span>
+              </span>
+            </button>
+          );
+        })
       )}
     </div>
   );
