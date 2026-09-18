@@ -23,6 +23,10 @@ export const COMPETICION_SLOT_RANGE: Record<Competicion, [number, number]> = {
 /** Jugadores habituales de la peña — plantilla para no tener que teclearlos cada vez. */
 export const PRESET_PLAYERS = ['GMR', 'DCB', 'CRS', 'MPF', 'HRQ', 'AFM', 'YAB', 'CDS', 'JGL', 'DPF'];
 
+/** Escala oficial del Pleno al 15: goles por equipo, con "M" = 3 o más. */
+export type PlenoAl15Valor = '0' | '1' | '2' | 'M';
+export const PLENO_AL_15_OPCIONES: PlenoAl15Valor[] = ['0', '1', '2', 'M'];
+
 export interface Player {
   id: string;
   name: string;
@@ -34,6 +38,14 @@ export interface Jornada {
   numero: number;
   estado: EstadoJornada;
   createdAt: string;
+  /**
+   * Resultado oficial del Pleno al 15 de esta jornada (escala 0/1/2/M), el
+   * mismo para toda la jornada aunque haya varios partidos marcados como
+   * Pleno al 15 (son el mismo enfrentamiento duplicado para desempates con
+   * más de 8 columnas) — se rellena una sola vez, no por partido.
+   */
+  plenoAl15Local: PlenoAl15Valor | null;
+  plenoAl15Visitante: PlenoAl15Valor | null;
 }
 
 export interface Partido {

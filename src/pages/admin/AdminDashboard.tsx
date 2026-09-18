@@ -5,6 +5,7 @@ import { dbService } from '../../dbService';
 import {
   COMPETICION_LABEL,
   COMPETICION_SLOT_RANGE,
+  PLENO_AL_15_OPCIONES,
   PRESET_PLAYERS,
   type Columna,
   type Competicion,
@@ -12,6 +13,7 @@ import {
   type EstadoPartido,
   type Jornada,
   type Partido,
+  type PlenoAl15Valor,
   type Player,
   type Signo,
 } from '../../domain/quiniela';
@@ -159,6 +161,14 @@ export function AdminDashboard() {
       await dbService.setJornadaEstado(selectedJornadaId, estado);
       await refreshJornadas();
     }, `Jornada marcada como ${ESTADO_JORNADA_LABEL[estado].toLowerCase()}`);
+  }
+
+  async function handleSetPlenoAl15(local: PlenoAl15Valor | null, visitante: PlenoAl15Valor | null) {
+    if (!selectedJornadaId) return;
+    await runAction(async () => {
+      await dbService.setPlenoAl15(selectedJornadaId, local, visitante);
+      await refreshJornadas();
+    }, 'Pleno al 15 guardado');
   }
 
   async function handleAddPartido() {
@@ -310,6 +320,42 @@ export function AdminDashboard() {
             ))}
           </div>
         )}
+
+        {selectedJornada && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: '0 0 0.4rem' }}>
+              Pleno al 15 (resultado único de la jornada, escala oficial 0-1-2-M):
+            </p>
+            <div className="form-row" style={{ alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem' }}>Local</span>
+              <div className="segmented">
+                {PLENO_AL_15_OPCIONES.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={selectedJornada.plenoAl15Local === v ? 'active' : ''}
+                    onClick={() => handleSetPlenoAl15(v, selectedJornada.plenoAl15Visitante)}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <span style={{ fontSize: '0.8rem' }}>Visitante</span>
+              <div className="segmented">
+                {PLENO_AL_15_OPCIONES.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={selectedJornada.plenoAl15Visitante === v ? 'active' : ''}
+                    onClick={() => handleSetPlenoAl15(selectedJornada.plenoAl15Local, v)}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {selectedJornada && (
@@ -366,7 +412,7 @@ export function AdminDashboard() {
                   checked={newPartido.esPlenoAl15}
                   onChange={(e) => setNewPartido({ ...newPartido, esPlenoAl15: e.target.checked })}
                 />
-                Pleno al 15 (marcador exacto)
+                Es el partido de Pleno al 15 (el resultado se fija arriba, en Jornadas)
               </label>
               <button type="button" className="btn btn-primary" onClick={handleAddPartido}>
                 Añadir partido #{partidos.length + 1}
@@ -424,8 +470,7 @@ export function AdminDashboard() {
 
             {selectedPlayerId && partidos.some((p) => p.esPlenoAl15) && (
               <p className="empty-state" style={{ padding: '0.5rem 0' }}>
-                Los partidos de Pleno al 15 son el mismo resultado para todos — se rellenan una vez en
-                "Partidos" (goles local/visitante), no aquí.
+                El Pleno al 15 es el mismo resultado para todos — se fija una vez arriba, en "Jornadas", no aquí.
               </p>
             )}
 

@@ -86,6 +86,8 @@ export function Live() {
         favoritePlayerId={favoritePlayerId}
         onToggleFavorite={toggleFavorite}
         posiciones={posiciones}
+        plenoAl15Local={jornada.plenoAl15Local}
+        plenoAl15Visitante={jornada.plenoAl15Visitante}
       />
     </div>
   );

@@ -62,6 +62,8 @@ export function Historico() {
           favoritePlayerId={favoritePlayerId}
           onToggleFavorite={toggleFavorite}
           posiciones={posiciones}
+          plenoAl15Local={seleccionada.plenoAl15Local}
+          plenoAl15Visitante={seleccionada.plenoAl15Visitante}
         />
       </div>
     );

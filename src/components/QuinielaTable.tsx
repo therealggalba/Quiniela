@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { contarAciertos, resultadoPick, type Columna, type Partido, type Player } from '../domain/quiniela';
+import { contarAciertos, resultadoPick, type Columna, type Partido, type PlenoAl15Valor, type Player } from '../domain/quiniela';
 import { TeamBadge } from './TeamBadge';
 
 interface Props {
@@ -10,6 +10,9 @@ interface Props {
   onToggleFavorite: (playerId: string) => void;
   /** Posición de cada jugador en la clasificación general (no en esta jornada). */
   posiciones: Map<string, number>;
+  /** Resultado oficial del Pleno al 15 de la jornada (escala 0/1/2/M), el mismo para todos los partidos marcados. */
+  plenoAl15Local: PlenoAl15Valor | null;
+  plenoAl15Visitante: PlenoAl15Valor | null;
 }
 
 /**
@@ -20,7 +23,16 @@ interface Props {
  * longitud del nombre del equipo. Pensada para caber en pantalla con el
  * mínimo scroll posible: partidos a una sola línea, hora omitida.
  */
-export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, onToggleFavorite, posiciones }: Props) {
+export function QuinielaTable({
+  players,
+  columnas,
+  partidos,
+  favoritePlayerId,
+  onToggleFavorite,
+  posiciones,
+  plenoAl15Local,
+  plenoAl15Visitante,
+}: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrolledToFavorite = useRef(false);
@@ -92,7 +104,11 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
               <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
               <span className={`qt-match-cell__marcador ${partido.estado === 'en_juego' ? 'live' : ''}`}>
                 {partido.estado === 'en_juego' && <span className="live-dot" />}
-                {partido.estado === 'programado' ? '–' : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
+                {partido.esPlenoAl15
+                  ? `${plenoAl15Local ?? '?'}-${plenoAl15Visitante ?? '?'}`
+                  : partido.estado === 'programado'
+                    ? '–'
+                    : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
               </span>
             </div>
           ))}

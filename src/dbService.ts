@@ -1,5 +1,5 @@
 import { supabase } from './lib/supabaseClient';
-import type { Columna, EstadoJornada, Jornada, Partido, Player } from './domain/quiniela';
+import type { Columna, EstadoJornada, Jornada, Partido, PlenoAl15Valor, Player } from './domain/quiniela';
 
 const LOCAL_STORAGE_KEY = 'quiniela_state_v1';
 
@@ -43,8 +43,8 @@ function seedDemoState(): LocalState {
     { id: 'p2', name: 'Marta', createdAt: now },
     { id: 'p3', name: 'Iván', createdAt: now },
   ];
-  const jornadaLive: Jornada = { id: 'j2', numero: 2, estado: 'en_juego', createdAt: now };
-  const jornadaClosed: Jornada = { id: 'j1', numero: 1, estado: 'cerrada', createdAt: now };
+  const jornadaLive: Jornada = { id: 'j2', numero: 2, estado: 'en_juego', createdAt: now, plenoAl15Local: null, plenoAl15Visitante: null };
+  const jornadaClosed: Jornada = { id: 'j1', numero: 1, estado: 'cerrada', createdAt: now, plenoAl15Local: '2', plenoAl15Visitante: '1' };
 
   const partidosLive: Partido[] = [
     { id: 'm1', jornadaId: 'j2', orden: 1, competicion: 'laliga', equipoLocal: 'Real Madrid', equipoVisitante: 'Betis', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 2, golesVisitante: 0, esPlenoAl15: false, updatedAt: now },
@@ -81,7 +81,14 @@ function rowToPlayer(row: any): Player {
 }
 
 function rowToJornada(row: any): Jornada {
-  return { id: row.id, numero: row.numero, estado: row.estado, createdAt: row.created_at };
+  return {
+    id: row.id,
+    numero: row.numero,
+    estado: row.estado,
+    createdAt: row.created_at,
+    plenoAl15Local: row.pleno_al_15_local ?? null,
+    plenoAl15Visitante: row.pleno_al_15_visitante ?? null,
+  };
 }
 
 function rowToPartido(row: any): Partido {
@@ -154,7 +161,14 @@ export const dbService = {
   async createJornada(numero: number): Promise<Jornada> {
     if (!supabase) {
       const state = getLocalState();
-      const jornada: Jornada = { id: crypto.randomUUID(), numero, estado: 'abierta', createdAt: new Date().toISOString() };
+      const jornada: Jornada = {
+        id: crypto.randomUUID(),
+        numero,
+        estado: 'abierta',
+        createdAt: new Date().toISOString(),
+        plenoAl15Local: null,
+        plenoAl15Visitante: null,
+      };
       state.jornadas.push(jornada);
       saveLocalState(state);
       return jornada;
@@ -173,6 +187,24 @@ export const dbService = {
       return;
     }
     const { error } = await supabase.from('quiniela_jornadas').update({ estado }).eq('id', id);
+    if (error) throw error;
+  },
+
+  async setPlenoAl15(id: string, local: PlenoAl15Valor | null, visitante: PlenoAl15Valor | null): Promise<void> {
+    if (!supabase) {
+      const state = getLocalState();
+      const jornada = state.jornadas.find((j) => j.id === id);
+      if (jornada) {
+        jornada.plenoAl15Local = local;
+        jornada.plenoAl15Visitante = visitante;
+      }
+      saveLocalState(state);
+      return;
+    }
+    const { error } = await supabase
+      .from('quiniela_jornadas')
+      .update({ pleno_al_15_local: local, pleno_al_15_visitante: visitante })
+      .eq('id', id);
     if (error) throw error;
   },
 
@@ -342,13 +374,23 @@ CREATE TABLE IF NOT EXISTS public.quiniela_players (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Jornadas
+-- Jornadas. pleno_al_15_local/visitante: resultado oficial del Pleno al 15
+-- en escala 0/1/2/M (M = 3 o más goles), el mismo para toda la jornada
+-- aunque haya varios partidos marcados como Pleno al 15 (mismo
+-- enfrentamiento duplicado para desempates con más de 8 columnas) — se
+-- rellena una sola vez aquí, no por partido ni por jugador.
 CREATE TABLE IF NOT EXISTS public.quiniela_jornadas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     numero INTEGER NOT NULL,
     estado TEXT NOT NULL DEFAULT 'abierta' CHECK (estado IN ('abierta', 'en_juego', 'cerrada')),
+    pleno_al_15_local TEXT CHECK (pleno_al_15_local IN ('0', '1', '2', 'M')),
+    pleno_al_15_visitante TEXT CHECK (pleno_al_15_visitante IN ('0', '1', '2', 'M')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Migración idempotente por si la tabla ya existía sin estas columnas.
+ALTER TABLE public.quiniela_jornadas ADD COLUMN IF NOT EXISTS pleno_al_15_local TEXT CHECK (pleno_al_15_local IN ('0', '1', '2', 'M'));
+ALTER TABLE public.quiniela_jornadas ADD COLUMN IF NOT EXISTS pleno_al_15_visitante TEXT CHECK (pleno_al_15_visitante IN ('0', '1', '2', 'M'));
 
 -- Partidos de cada jornada (1ª, 2ª y Liga F mezclados). "orden" fija el
 -- número de partido dentro de la jornada (1-7 Primera, 8-10 Segunda,
