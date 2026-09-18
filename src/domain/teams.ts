@@ -61,26 +61,29 @@ const SEGUNDA_TEAMS: TeamInfo[] = [
   { name: 'CD Tenerife', shortCode: 'TEN', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/utuqys1420503958.png' },
 ];
 
-// Liga F Moeve 2026/27, 16 clubes — nombres confirmados vía Wikipedia.
-// Escudos pendientes salvo los 3 ya localizados en TheSportsDB antes del
-// rate-limit (429); el resto cae al código de 3 letras hasta completarlo.
+// Liga F Moeve 2026/27, 16 clubes — nombres confirmados vía Wikipedia, los
+// 16 escudos confirmados en TheSportsDB (varias entradas femeninas están
+// indexadas allí con nombre propio distinto del equipo masculino homónimo:
+// Athletic Club -> "Athletic Club Women", Deportivo Abanca -> "Deportivo de
+// La Coruña Women", Deportivo Alavés -> "Alavés Gloriosas", Sevilla FC ->
+// "Sevilla Women").
 const LIGAF_TEAMS: TeamInfo[] = [
-  { name: 'Deportivo Alavés', shortCode: 'ALA' },
-  { name: 'Athletic Club', shortCode: 'ATH' },
+  { name: 'Deportivo Alavés', shortCode: 'ALA', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/0aaifo1734673843.png' },
+  { name: 'Athletic Club', shortCode: 'ATH', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/y4dp9v1641554845.png' },
   { name: 'Atlético de Madrid', shortCode: 'ATM', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/n50qxy1719566251.png' },
   { name: 'FC Barcelona', shortCode: 'FCB', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/2we5kr1641409884.png' },
   { name: 'Badalona Women', shortCode: 'BDN', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/hqgbe91753204520.png' },
-  { name: 'Deportivo Abanca', shortCode: 'ABA' },
-  { name: 'SD Eibar', shortCode: 'EIB' },
-  { name: 'RCD Espanyol', shortCode: 'ESP' },
-  { name: 'Granada CF', shortCode: 'GRA' },
-  { name: 'Logroño United', shortCode: 'LOG' },
-  { name: 'Madrid CFF', shortCode: 'MCF' },
-  { name: 'Real Madrid', shortCode: 'RMA' },
-  { name: 'Real Sociedad', shortCode: 'RSO' },
-  { name: 'Sevilla FC', shortCode: 'SEV' },
-  { name: 'CD Tenerife', shortCode: 'TEN' },
-  { name: 'Valencia CF', shortCode: 'VAL' },
+  { name: 'Deportivo Abanca', shortCode: 'ABA', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/e0d1cf1783013166.png' },
+  { name: 'SD Eibar', shortCode: 'EIB', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/n2g9mp1641560234.png' },
+  { name: 'RCD Espanyol', shortCode: 'ESP', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/wwdohe1641563745.png' },
+  { name: 'Granada CF', shortCode: 'GRA', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/xecwzu1685869518.png' },
+  { name: 'Logroño United', shortCode: 'LOG', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/w8j6th1784540525.png' },
+  { name: 'Madrid CFF', shortCode: 'MCF', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/tuo56b1753205791.png' },
+  { name: 'Real Madrid', shortCode: 'RMA', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/buhef11664011241.png' },
+  { name: 'Real Sociedad', shortCode: 'RSO', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/l2728s1641561085.png' },
+  { name: 'Sevilla FC', shortCode: 'SEV', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/l0ir711641561238.png' },
+  { name: 'CD Tenerife', shortCode: 'TEN', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/qp0plf1751994935.png' },
+  { name: 'Valencia CF', shortCode: 'VAL', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/alvi3a1661511071.png' },
 ];
 
 export const TEAMS_BY_COMPETICION: Record<Competicion, TeamInfo[]> = {
