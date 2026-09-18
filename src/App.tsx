@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import { BottomNav } from './components/BottomNav';
+import { LockIcon } from './components/icons';
 import { AdminPage } from './pages/AdminPage';
 import { Clasificacion } from './pages/Clasificacion';
 import { Historico } from './pages/Historico';
@@ -21,7 +22,7 @@ function Shell() {
         <h1>Quiniela</h1>
         {!isAdmin && (
           <Link to="/admin" className="admin-entry" aria-label="Modo edición">
-            🔒
+            <LockIcon />
           </Link>
         )}
       </header>

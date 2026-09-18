@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TeamSelect } from '../../components/TeamSelect';
 import { dbService } from '../../dbService';
 import {
@@ -33,6 +34,7 @@ function suggestCompeticion(orden: number): Competicion {
 }
 
 export function AdminDashboard() {
+  const navigate = useNavigate();
   const [players, setPlayers] = useState<Player[]>([]);
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [selectedJornadaId, setSelectedJornadaId] = useState<string | null>(null);
@@ -223,6 +225,11 @@ export function AdminDashboard() {
     }, 'Columna guardada');
   }
 
+  async function handleVolver() {
+    await supabase?.auth.signOut();
+    navigate('/');
+  }
+
   const conteoPorCompeticion = COMPETICIONES.map((c) => ({
     competicion: c,
     count: partidos.filter((p) => p.competicion === c).length,
@@ -232,10 +239,10 @@ export function AdminDashboard() {
   return (
     <div className="admin-shell">
       <div className="admin-header">
-        <h1 style={{ fontSize: '1.1rem', margin: 0 }}>Modo edición</h1>
-        <button type="button" className="btn" onClick={() => supabase?.auth.signOut()}>
-          Cerrar sesión
+        <button type="button" className="btn" onClick={handleVolver}>
+          ← Volver al inicio
         </button>
+        <h1 style={{ fontSize: '1.1rem', margin: 0 }}>Modo edición</h1>
       </div>
 
       {feedback && <div className={feedback.type === 'error' ? 'field-error' : 'field-success'}>{feedback.message}</div>}
@@ -371,7 +378,7 @@ export function AdminDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>
                     #{partido.orden} {COMPETICION_LABEL[partido.competicion]}: {partido.equipoLocal} – {partido.equipoVisitante}
-                    {partido.esPlenoAl15 && ' 🎯'}
+                    {partido.esPlenoAl15 && ' · Pleno al 15'}
                   </span>
                   <button type="button" className="btn btn-danger" onClick={() => handleDeletePartido(partido.id)}>
                     Eliminar

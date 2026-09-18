@@ -17,11 +17,25 @@
   z-index: 5;
 }
 
+/* Camuflado a propósito: mismo tono que el fondo, casi invisible salvo que
+   se busque a propósito. Un poco más de contraste al pasar el cursor/foco
+   para que siga siendo accesible. */
 .admin-entry {
-  text-decoration: none;
-  font-size: 1rem;
-  opacity: 0.55;
-  padding: 0.3rem;
+  display: flex;
+  color: var(--bg);
+  padding: 0.35rem;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.admin-entry:hover,
+.admin-entry:focus-visible {
+  color: var(--border);
+}
+
+.admin-entry svg {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .app-header h1 {
@@ -83,7 +97,8 @@
 }
 
 .bottom-nav .icon {
-  font-size: 1.15rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* Tabla estilo hoja de cálculo: partidos fijos (una sola línea cada uno,

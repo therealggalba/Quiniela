@@ -92,7 +92,6 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
               <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
               <span className={`qt-match-cell__marcador ${partido.estado === 'en_juego' ? 'live' : ''}`}>
                 {partido.estado === 'en_juego' && <span className="live-dot" />}
-                {partido.esPlenoAl15 && '🎯 '}
                 {partido.estado === 'programado' ? '–' : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
               </span>
             </div>
