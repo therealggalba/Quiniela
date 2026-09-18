@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 
 export function Login() {
@@ -22,6 +23,9 @@ export function Login() {
 
   return (
     <form className="login-form" onSubmit={handleSubmit}>
+      <Link to="/" className="btn" style={{ alignSelf: 'flex-start' }}>
+        ← Volver al inicio
+      </Link>
       <h2 style={{ margin: 0 }}>Modo edición</h2>
       <input
         type="email"
