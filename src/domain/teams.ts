@@ -32,11 +32,56 @@ const LALIGA_TEAMS: TeamInfo[] = [
   { name: 'Málaga CF', shortCode: 'MAL', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/upqyvr1473502952.png' },
 ];
 
-// TODO: pendiente de completar con la investigación de escudos en curso.
-const SEGUNDA_TEAMS: TeamInfo[] = [];
+// Segunda División 2026/27 (Hypermotion), 22 clubes — nombres confirmados vía
+// Wikipedia y cruzados con TheSportsDB. RC Celta Fortuna es el filial del
+// Celta jugando a la Segunda con licencia propia (equipo distinto del
+// primer equipo, que sigue en LaLiga).
+const SEGUNDA_TEAMS: TeamInfo[] = [
+  { name: 'Albacete Balompié', shortCode: 'ALB', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/17oqja1616436316.png' },
+  { name: 'UD Almería', shortCode: 'ALM', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/yswsww1473503818.png' },
+  { name: 'FC Andorra', shortCode: 'AND', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/eyaka21639481902.png' },
+  { name: 'Burgos CF', shortCode: 'BUR', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/79h3ul1708150894.png' },
+  { name: 'Cádiz CF', shortCode: 'CAD', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/e2phzp1639408503.png' },
+  { name: 'CD Castellón', shortCode: 'CAS', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/ywibjw1733456820.png' },
+  { name: 'RC Celta Fortuna', shortCode: 'CFO', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/t22qex1690436192.png' },
+  { name: 'AD Ceuta FC', shortCode: 'CEU', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/ja7sl51677475273.png' },
+  { name: 'Córdoba CF', shortCode: 'COR', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/ttyyvy1473503827.png' },
+  { name: 'SD Eibar', shortCode: 'EIB', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/hccive1680933599.png' },
+  { name: 'CD Eldense', shortCode: 'ELD', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/asdjgc1733549950.png' },
+  { name: 'Girona FC', shortCode: 'GIR', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/kfu7zu1659897499.png' },
+  { name: 'Granada CF', shortCode: 'GRA', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/f9iss11677472689.png' },
+  { name: 'UD Las Palmas', shortCode: 'LPA', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/mmhyb11616443601.png' },
+  { name: 'CD Leganés', shortCode: 'LEG', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/tm0adr1616443898.png' },
+  { name: 'RCD Mallorca', shortCode: 'MLL', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/ssptsx1473503730.png' },
+  { name: 'Real Oviedo', shortCode: 'OVI', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/yuwqus1447590681.png' },
+  { name: 'Real Sociedad B', shortCode: 'RSB', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/hliq4n1579632023.png' },
+  { name: 'Real Valladolid CF', shortCode: 'VLL', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/bnhu8b1719983736.png' },
+  { name: 'CE Sabadell FC', shortCode: 'SAB', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/21mapu1690094066.png' },
+  { name: 'Real Sporting de Gijón', shortCode: 'SPO', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/xxrtqx1473503054.png' },
+  { name: 'CD Tenerife', shortCode: 'TEN', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/utuqys1420503958.png' },
+];
 
-// TODO: pendiente de completar con la investigación de escudos en curso.
-const LIGAF_TEAMS: TeamInfo[] = [];
+// Liga F Moeve 2026/27, 16 clubes — nombres confirmados vía Wikipedia.
+// Escudos pendientes salvo los 3 ya localizados en TheSportsDB antes del
+// rate-limit (429); el resto cae al código de 3 letras hasta completarlo.
+const LIGAF_TEAMS: TeamInfo[] = [
+  { name: 'Deportivo Alavés', shortCode: 'ALA' },
+  { name: 'Athletic Club', shortCode: 'ATH' },
+  { name: 'Atlético de Madrid', shortCode: 'ATM', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/n50qxy1719566251.png' },
+  { name: 'FC Barcelona', shortCode: 'FCB', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/2we5kr1641409884.png' },
+  { name: 'Badalona Women', shortCode: 'BDN', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/hqgbe91753204520.png' },
+  { name: 'Deportivo Abanca', shortCode: 'ABA' },
+  { name: 'SD Eibar', shortCode: 'EIB' },
+  { name: 'RCD Espanyol', shortCode: 'ESP' },
+  { name: 'Granada CF', shortCode: 'GRA' },
+  { name: 'Logroño United', shortCode: 'LOG' },
+  { name: 'Madrid CFF', shortCode: 'MCF' },
+  { name: 'Real Madrid', shortCode: 'RMA' },
+  { name: 'Real Sociedad', shortCode: 'RSO' },
+  { name: 'Sevilla FC', shortCode: 'SEV' },
+  { name: 'CD Tenerife', shortCode: 'TEN' },
+  { name: 'Valencia CF', shortCode: 'VAL' },
+];
 
 export const TEAMS_BY_COMPETICION: Record<Competicion, TeamInfo[]> = {
   laliga: LALIGA_TEAMS,
