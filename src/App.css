@@ -86,12 +86,18 @@
   font-size: 1.15rem;
 }
 
-/* Tabla estilo hoja de cálculo: partidos fijos + una columna de jugador
-   deslizante. Alturas de fila fijas para que ambos lados queden siempre
-   alineados, sea cual sea la longitud del nombre del equipo. */
+/* Tabla estilo hoja de cálculo: partidos fijos (una sola línea cada uno,
+   foco en equipos+resultado, sin hora) + una columna de jugador deslizante
+   más ancha y destacada. Alturas de fila fijas para que ambos lados queden
+   siempre alineados, sea cual sea la longitud del nombre del equipo.
+   Pensada para minimizar el scroll: filas compactas, cabecera mínima. */
 :root {
-  --qt-row-height: 3.6rem;
-  --qt-picks-width: 5.5rem;
+  --qt-row-height: 2.3rem;
+  --qt-picks-width: 8.5rem;
+  --comp-laliga: #ff7a1a;
+  --comp-segunda: #2f9bbf;
+  --comp-ligaf: #c23bde;
+  --comp-pleno: #f5c518;
 }
 
 .qt {
@@ -101,25 +107,63 @@
 
 .qt__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 1rem;
+  align-items: stretch;
   border-bottom: 1px solid var(--border);
 }
 
-.qt__player {
+.qt__header-matches {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.qt__header-player {
+  flex: 0 0 var(--qt-picks-width);
+  width: var(--qt-picks-width);
+  border-left: 1px solid var(--border);
+  padding: 0.4rem 0.5rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  background: var(--surface);
 }
 
 .qt__player-name {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .qt__player-stats {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.qt-stat-pill {
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.qt-stat-pill--aciertos {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.qt-stat-pill--posicion {
+  color: #f5c518;
+  background: rgba(245, 197, 24, 0.16);
 }
 
 .qt__body {
@@ -161,53 +205,39 @@
 
 .qt-match-cell {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.15rem;
-  padding: 0 0.75rem 0 1rem;
-  overflow: hidden;
-}
-
-.qt-match-cell__meta {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.qt-match-cell__teams {
-  display: flex;
   align-items: center;
   gap: 0.3rem;
-  min-width: 0;
+  padding: 0 0.5rem 0 0.6rem;
+  overflow: hidden;
+  border-left: 3px solid var(--comp-laliga);
+}
+
+.qt-match-cell--segunda {
+  border-left-color: var(--comp-segunda);
+}
+
+.qt-match-cell--ligaf {
+  border-left-color: var(--comp-ligaf);
+}
+
+.qt-match-cell--pleno {
+  border-left-color: var(--comp-pleno);
 }
 
 .qt-match-cell__names {
-  font-size: 0.82rem;
+  flex: 1 1 auto;
+  font-size: 0.8rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
-.qt-match-cell__foot {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.qt-match-cell__kickoff {
-  font-size: 0.65rem;
-  color: var(--text-dim);
-}
-
 .qt-match-cell__marcador {
+  flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  font-size: 0.78rem;
+  font-weight: 700;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 

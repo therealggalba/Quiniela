@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { QuinielaTable } from '../components/QuinielaTable';
 import { dbService } from '../dbService';
 import type { Columna, Jornada, Partido, Player } from '../domain/quiniela';
+import { useClasificacionPositions } from '../lib/useClasificacionPositions';
 import { useFavoritePlayer } from '../lib/useFavoritePlayer';
 
 export function Historico() {
@@ -12,6 +13,7 @@ export function Historico() {
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [columnas, setColumnas] = useState<Columna[]>([]);
   const [loading, setLoading] = useState(true);
+  const posiciones = useClasificacionPositions(players, jornadasCerradas);
 
   useEffect(() => {
     async function load() {
@@ -59,6 +61,7 @@ export function Historico() {
           partidos={partidos}
           favoritePlayerId={favoritePlayerId}
           onToggleFavorite={toggleFavorite}
+          posiciones={posiciones}
         />
       </div>
     );

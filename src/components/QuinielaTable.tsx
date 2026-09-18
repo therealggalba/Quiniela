@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { COMPETICION_LABEL, contarAciertos, resultadoPick, type Columna, type Partido, type Player } from '../domain/quiniela';
+import { contarAciertos, resultadoPick, type Columna, type Partido, type Player } from '../domain/quiniela';
 import { TeamBadge } from './TeamBadge';
 
 interface Props {
@@ -8,12 +8,8 @@ interface Props {
   partidos: Partido[];
   favoritePlayerId: string | null;
   onToggleFavorite: (playerId: string) => void;
-}
-
-function formatKickoff(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('es-ES', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  /** Posición de cada jugador en la clasificación general (no en esta jornada). */
+  posiciones: Map<string, number>;
 }
 
 /**
@@ -21,9 +17,10 @@ function formatKickoff(iso: string): string {
  * todos, no se mueve) y a su derecha se desliza, de una en una, la columna
  * de pronósticos de cada jugador (orden alfabético). Cada fila mide lo
  * mismo en ambos lados para que siempre queden alineadas, sin importar la
- * longitud del nombre del equipo.
+ * longitud del nombre del equipo. Pensada para caber en pantalla con el
+ * mínimo scroll posible: partidos a una sola línea, hora omitida.
  */
-export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, onToggleFavorite }: Props) {
+export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, onToggleFavorite, posiciones }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrolledToFavorite = useRef(false);
@@ -59,47 +56,44 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
   const aciertos = currentColumna ? contarAciertos(currentColumna, partidos) : 0;
   const resueltos = partidos.filter((p) => p.estado === 'finalizado' && !p.esPlenoAl15).length;
   const isFavorite = favoritePlayerId === currentPlayer.id;
+  const posicion = posiciones.get(currentPlayer.id);
 
   return (
     <div className="qt">
       <div className="qt__header">
-        <div className="qt__player">
-          <span className="qt__player-name">{currentPlayer.name}</span>
-          <span className="qt__player-stats">
-            {aciertos}/{resueltos} aciertos
-          </span>
+        <div className="qt__header-matches" aria-hidden="true" />
+        <div className="qt__header-player">
+          <div className="qt__player-name">
+            <button
+              type="button"
+              className={`fav-btn ${isFavorite ? 'active' : ''}`}
+              onClick={() => onToggleFavorite(currentPlayer.id)}
+              aria-label={isFavorite ? 'Quitar de favorita' : 'Marcar como favorita'}
+            >
+              {isFavorite ? '★' : '☆'}
+            </button>
+            {currentPlayer.name}
+          </div>
+          <div className="qt__player-stats">
+            <span className="qt-stat-pill qt-stat-pill--aciertos">{aciertos}/{resueltos} aciertos</span>
+            {posicion && <span className="qt-stat-pill qt-stat-pill--posicion">{posicion}º gral.</span>}
+          </div>
         </div>
-        <button
-          type="button"
-          className={`fav-btn ${isFavorite ? 'active' : ''}`}
-          onClick={() => onToggleFavorite(currentPlayer.id)}
-          aria-label={isFavorite ? 'Quitar de favorita' : 'Marcar como favorita'}
-        >
-          {isFavorite ? '★' : '☆'}
-        </button>
       </div>
 
       <div className="qt__body">
         <div className="qt__matches">
           {partidos.map((partido) => (
-            <div key={partido.id} className="qt-match-cell">
-              <span className="qt-match-cell__meta">
-                #{partido.orden} · {COMPETICION_LABEL[partido.competicion]}
-                {partido.esPlenoAl15 && ' · Pleno al 15'}
+            <div key={partido.id} className={`qt-match-cell qt-match-cell--${partido.competicion}${partido.esPlenoAl15 ? ' qt-match-cell--pleno' : ''}`}>
+              <TeamBadge competicion={partido.competicion} team={partido.equipoLocal} />
+              <span className="qt-match-cell__names">
+                {partido.equipoLocal} – {partido.equipoVisitante}
               </span>
-              <span className="qt-match-cell__teams">
-                <TeamBadge competicion={partido.competicion} team={partido.equipoLocal} />
-                <span className="qt-match-cell__names">
-                  {partido.equipoLocal} – {partido.equipoVisitante}
-                </span>
-                <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
-              </span>
-              <span className="qt-match-cell__foot">
-                <span className="qt-match-cell__kickoff">{formatKickoff(partido.kickoffAt)}</span>
-                <span className={`qt-match-cell__marcador ${partido.estado === 'en_juego' ? 'live' : ''}`}>
-                  {partido.estado === 'en_juego' && <span className="live-dot" />}
-                  {partido.estado === 'programado' ? '–:–' : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
-                </span>
+              <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
+              <span className={`qt-match-cell__marcador ${partido.estado === 'en_juego' ? 'live' : ''}`}>
+                {partido.estado === 'en_juego' && <span className="live-dot" />}
+                {partido.esPlenoAl15 && '🎯 '}
+                {partido.estado === 'programado' ? '–' : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
               </span>
             </div>
           ))}

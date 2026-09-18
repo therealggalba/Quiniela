@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { QuinielaTable } from '../components/QuinielaTable';
 import { dbService } from '../dbService';
 import type { Columna, Jornada, Partido, Player } from '../domain/quiniela';
+import { useClasificacionPositions } from '../lib/useClasificacionPositions';
 import { useFavoritePlayer } from '../lib/useFavoritePlayer';
 
 const LIVE_POLL_MS = 60_000;
@@ -20,7 +21,9 @@ export function Live() {
   const [jornada, setJornada] = useState<Jornada | null>(null);
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [columnas, setColumnas] = useState<Columna[]>([]);
+  const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [loading, setLoading] = useState(true);
+  const posiciones = useClasificacionPositions(players, jornadas);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +31,7 @@ export function Live() {
       const [playersData, jornadasData] = await Promise.all([dbService.listPlayers(), dbService.listJornadas()]);
       if (cancelled) return;
       setPlayers(playersData);
+      setJornadas(jornadasData);
       const actual = pickJornadaActual(jornadasData);
       setJornada(actual);
       if (actual) {
@@ -81,6 +85,7 @@ export function Live() {
         partidos={partidos}
         favoritePlayerId={favoritePlayerId}
         onToggleFavorite={toggleFavorite}
+        posiciones={posiciones}
       />
     </div>
   );
