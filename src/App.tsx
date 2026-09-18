@@ -7,10 +7,15 @@ import { Clasificacion } from './pages/Clasificacion';
 import { Historico } from './pages/Historico';
 import { Live } from './pages/Live';
 
-// En producción se sirve bajo /quiniela/ dentro de GalbaHUB: sin basename,
-// react-router resolvería las rutas contra la raíz del dominio en vez de
-// contra /quiniela/. Mismo criterio que IASport.
-const basename = import.meta.env.DEV ? undefined : '/quiniela';
+// Esta app se despliega en dos sitios con rutas base distintas: /quiniela/
+// dentro de GalbaHUB (vite.config.ts) y /Quiniela/ en GitHub Pages (build
+// con --base=/Quiniela/, ver .github/workflows/deploy.yml). En vez de fijar
+// un basename a mano (que solo valdría para uno de los dos), se deriva del
+// BASE_URL que Vite ya resuelve en build a partir de --base o del config —
+// así el router siempre coincide con la ruta real, sea cual sea el destino.
+// Sin basename, react-router resolvería las rutas contra la raíz del
+// dominio en vez de contra la subruta real. Mismo criterio que IASport.
+const basename = import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function Shell() {
   const location = useLocation();

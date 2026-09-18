@@ -5,6 +5,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Quiniela</title>
+    <!--
+      GitHub Pages sirve archivos estáticos: no sabe resolver rutas internas
+      de la SPA (p.ej. /historico) si se entra directamente por ahí, así que
+      public/404.html redirige a aquí codificando la ruta real en la query
+      string, y este script la restaura con history.replaceState antes de
+      que React Router monte. En GalbaHub/Vercel (que sí sabe reescribir
+      cualquier ruta a index.html) esta condición nunca se cumple, así que
+      no afecta a ese despliegue. Patrón estándar: rafgraph/spa-github-pages.
+    -->
+    <script type="text/javascript">
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+        }
+      })(window.location);
+    </script>
   </head>
   <body>
     <div id="root"></div>
