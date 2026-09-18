@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ColumnaCarousel } from '../components/ColumnaCarousel';
+import { QuinielaTable } from '../components/QuinielaTable';
 import { dbService } from '../dbService';
 import type { Columna, Jornada, Partido, Player } from '../domain/quiniela';
 import { useFavoritePlayer } from '../lib/useFavoritePlayer';
@@ -46,14 +46,14 @@ export function Historico() {
 
   if (seleccionada) {
     return (
-      <div className="page">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+      <div>
+        <div className="page" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', paddingBottom: 0 }}>
           <button type="button" className="btn" onClick={() => setSeleccionada(null)}>
             ← Volver
           </button>
           <h2 style={{ margin: 0, fontSize: '1rem' }}>Jornada {seleccionada.numero}</h2>
         </div>
-        <ColumnaCarousel
+        <QuinielaTable
           players={players}
           columnas={columnas}
           partidos={partidos}

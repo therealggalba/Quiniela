@@ -32,11 +32,6 @@ function suggestCompeticion(orden: number): Competicion {
   return 'ligaf';
 }
 
-function parsePleno(value: string | undefined): [string, string] {
-  const [h, a] = (value ?? '-').split('-');
-  return [h === '-' ? '' : (h ?? ''), a === '-' ? '' : (a ?? '')];
-}
-
 export function AdminDashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
@@ -218,10 +213,6 @@ export function AdminDashboard() {
 
   function setPick(partidoId: string, signo: Signo) {
     setDraftPicks((prev) => ({ ...prev, [partidoId]: signo }));
-  }
-
-  function setPlenoPick(partidoId: string, golesLocal: string, golesVisitante: string) {
-    setDraftPicks((prev) => ({ ...prev, [partidoId]: `${golesLocal}-${golesVisitante}` }));
   }
 
   async function handleSaveColumna() {
@@ -424,48 +415,35 @@ export function AdminDashboard() {
               <p className="empty-state">Añade partidos a esta jornada antes de crear columnas.</p>
             )}
 
+            {selectedPlayerId && partidos.some((p) => p.esPlenoAl15) && (
+              <p className="empty-state" style={{ padding: '0.5rem 0' }}>
+                Los partidos de Pleno al 15 son el mismo resultado para todos — se rellenan una vez en
+                "Partidos" (goles local/visitante), no aquí.
+              </p>
+            )}
+
             {selectedPlayerId &&
-              partidos.map((partido) => {
-                const [golesLocal, golesVisitante] = parsePleno(draftPicks[partido.id]);
-                return (
+              partidos
+                .filter((p) => !p.esPlenoAl15)
+                .map((partido) => (
                   <div key={partido.id} style={{ margin: '0.6rem 0' }}>
                     <div style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                       #{partido.orden} {partido.equipoLocal} – {partido.equipoVisitante}
                     </div>
-                    {partido.esPlenoAl15 ? (
-                      <div className="form-row">
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Goles local"
-                          value={golesLocal}
-                          onChange={(e) => setPlenoPick(partido.id, e.target.value, golesVisitante)}
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Goles visitante"
-                          value={golesVisitante}
-                          onChange={(e) => setPlenoPick(partido.id, golesLocal, e.target.value)}
-                        />
-                      </div>
-                    ) : (
-                      <div className="pick-selector">
-                        {SIGNOS.map((signo) => (
-                          <button
-                            key={signo}
-                            type="button"
-                            className={draftPicks[partido.id] === signo ? 'selected' : ''}
-                            onClick={() => setPick(partido.id, signo)}
-                          >
-                            {signo}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <div className="pick-selector">
+                      {SIGNOS.map((signo) => (
+                        <button
+                          key={signo}
+                          type="button"
+                          className={draftPicks[partido.id] === signo ? 'selected' : ''}
+                          onClick={() => setPick(partido.id, signo)}
+                        >
+                          {signo}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                );
-              })}
+                ))}
 
             {selectedPlayerId && partidos.length > 0 && (
               <button type="button" className="btn btn-primary" onClick={handleSaveColumna}>

@@ -86,121 +86,139 @@
   font-size: 1.15rem;
 }
 
-/* Carousel de columnas */
-.carousel {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem 0.25rem;
-  -webkit-overflow-scrolling: touch;
+/* Tabla estilo hoja de cálculo: partidos fijos + una columna de jugador
+   deslizante. Alturas de fila fijas para que ambos lados queden siempre
+   alineados, sea cual sea la longitud del nombre del equipo. */
+:root {
+  --qt-row-height: 3.6rem;
+  --qt-picks-width: 5.5rem;
 }
 
-.carousel::-webkit-scrollbar {
-  display: none;
-}
-
-.columna-card {
-  flex: 0 0 88%;
-  max-width: 420px;
-  scroll-snap-align: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 0.85rem;
-}
-
-.columna-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.6rem;
-}
-
-.columna-card__name {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 600;
-}
-
-.columna-card__stats {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-.fav-btn {
-  background: none;
-  border: none;
-  font-size: 1.15rem;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--text-dim);
-}
-
-.fav-btn.active {
-  color: #f5c518;
-}
-
-.carousel-dots {
-  display: flex;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0 0.6rem;
-}
-
-.carousel-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border);
-}
-
-.carousel-dots span.active {
-  background: var(--accent);
-}
-
-/* Filas de partido */
-.partido-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.15rem;
-  border-bottom: 1px solid var(--border);
-  gap: 0.5rem;
-}
-
-.partido-row:last-child {
-  border-bottom: none;
-}
-
-.partido-row__teams {
+.qt {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+}
+
+.qt__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.qt__player {
+  display: flex;
+  flex-direction: column;
+}
+
+.qt__player-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.qt__player-stats {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.qt__body {
+  display: flex;
+  align-items: stretch;
+}
+
+.qt__matches {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.partido-row__competicion {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
+.qt__picks {
+  flex: 0 0 var(--qt-picks-width);
+  width: var(--qt-picks-width);
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  border-left: 1px solid var(--border);
 }
 
-.partido-row__equipos {
+.qt__picks::-webkit-scrollbar {
+  display: none;
+}
+
+.qt-picks-page {
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
+}
+
+.qt-match-cell,
+.qt-pick-cell {
+  height: var(--qt-row-height);
+  border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
+}
+
+.qt-match-cell {
   display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.85rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0 0.75rem 0 1rem;
+  overflow: hidden;
+}
+
+.qt-match-cell__meta {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.partido-row__kickoff {
-  font-size: 0.68rem;
+.qt-match-cell__teams {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.qt-match-cell__names {
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.qt-match-cell__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.qt-match-cell__kickoff {
+  font-size: 0.65rem;
   color: var(--text-dim);
+}
+
+.qt-match-cell__marcador {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.qt-match-cell__marcador.live {
+  color: var(--live);
+}
+
+.qt-pick-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .team-badge {
@@ -223,16 +241,6 @@
   color: var(--text-dim);
 }
 
-.partido-row__marcador {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.partido-row__marcador.live {
-  color: var(--live);
-}
-
 .live-dot {
   display: inline-block;
   width: 6px;
@@ -246,6 +254,37 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+
+.fav-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.fav-btn.active {
+  color: #f5c518;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0 0.6rem;
+}
+
+.carousel-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.carousel-dots span.active {
+  background: var(--accent);
 }
 
 .pick-badge {
@@ -267,6 +306,11 @@
   min-width: 2.1rem;
   padding: 0 0.35rem;
   font-size: 0.75rem;
+}
+
+.pick-badge--muted {
+  color: var(--text-dim);
+  background: transparent;
 }
 
 .pick-badge.hit {

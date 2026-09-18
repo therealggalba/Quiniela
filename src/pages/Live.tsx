@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ColumnaCarousel } from '../components/ColumnaCarousel';
+import { QuinielaTable } from '../components/QuinielaTable';
 import { dbService } from '../dbService';
 import type { Columna, Jornada, Partido, Player } from '../domain/quiniela';
 import { useFavoritePlayer } from '../lib/useFavoritePlayer';
@@ -70,12 +70,12 @@ export function Live() {
   }
 
   return (
-    <div className="page">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+    <div>
+      <div className="page" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: 0 }}>
         <h2 style={{ margin: 0, fontSize: '1rem' }}>Jornada {jornada.numero}</h2>
         <span className={`badge-estado ${jornada.estado}`}>{jornada.estado.replace('_', ' ')}</span>
       </div>
-      <ColumnaCarousel
+      <QuinielaTable
         players={players}
         columnas={columnas}
         partidos={partidos}

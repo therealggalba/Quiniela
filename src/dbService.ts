@@ -119,11 +119,11 @@ export const dbService = {
   },
 
   async listPlayers(): Promise<Player[]> {
-    if (!supabase) return getLocalState().players;
+    if (!supabase) return getLocalState().players.sort((a, b) => a.name.localeCompare(b.name));
     const { data, error } = await supabase.from('quiniela_players').select('*').order('name');
     if (error) {
       console.warn('Supabase listPlayers falló, usando estado local:', error.message);
-      return getLocalState().players;
+      return getLocalState().players.sort((a, b) => a.name.localeCompare(b.name));
     }
     return (data ?? []).map(rowToPlayer);
   },
