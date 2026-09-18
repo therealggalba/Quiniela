@@ -1,5 +1,5 @@
 import { supabase } from './lib/supabaseClient';
-import type { Columna, EstadoJornada, Jornada, Partido, Player, Signo } from './domain/quiniela';
+import type { Columna, EstadoJornada, Jornada, Partido, Player } from './domain/quiniela';
 
 const LOCAL_STORAGE_KEY = 'quiniela_state_v1';
 
@@ -47,23 +47,23 @@ function seedDemoState(): LocalState {
   const jornadaClosed: Jornada = { id: 'j1', numero: 1, estado: 'cerrada', createdAt: now };
 
   const partidosLive: Partido[] = [
-    { id: 'm1', jornadaId: 'j2', competicion: 'laliga', equipoLocal: 'Real Madrid', equipoVisitante: 'Betis', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 2, golesVisitante: 0, updatedAt: now },
-    { id: 'm2', jornadaId: 'j2', competicion: 'laliga', equipoLocal: 'Barcelona', equipoVisitante: 'Sevilla', apiFixtureId: null, kickoffAt: now, estado: 'en_juego', golesLocal: 1, golesVisitante: 1, updatedAt: now },
-    { id: 'm3', jornadaId: 'j2', competicion: 'segunda', equipoLocal: 'Racing', equipoVisitante: 'Deportivo', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, updatedAt: now },
-    { id: 'm4', jornadaId: 'j2', competicion: 'ligaf', equipoLocal: 'Atlético', equipoVisitante: 'Levante', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, updatedAt: now },
+    { id: 'm1', jornadaId: 'j2', orden: 1, competicion: 'laliga', equipoLocal: 'Real Madrid', equipoVisitante: 'Betis', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 2, golesVisitante: 0, esPlenoAl15: false, updatedAt: now },
+    { id: 'm2', jornadaId: 'j2', orden: 2, competicion: 'laliga', equipoLocal: 'Barcelona', equipoVisitante: 'Sevilla', apiFixtureId: null, kickoffAt: now, estado: 'en_juego', golesLocal: 1, golesVisitante: 1, esPlenoAl15: false, updatedAt: now },
+    { id: 'm3', jornadaId: 'j2', orden: 3, competicion: 'segunda', equipoLocal: 'Racing', equipoVisitante: 'Deportivo', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, esPlenoAl15: false, updatedAt: now },
+    { id: 'm4', jornadaId: 'j2', orden: 4, competicion: 'ligaf', equipoLocal: 'Atlético', equipoVisitante: 'Levante', apiFixtureId: null, kickoffAt: now, estado: 'programado', golesLocal: null, golesVisitante: null, esPlenoAl15: false, updatedAt: now },
   ];
   const partidosClosed: Partido[] = [
-    { id: 'm5', jornadaId: 'j1', competicion: 'laliga', equipoLocal: 'Valencia', equipoVisitante: 'Villarreal', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 1, golesVisitante: 1, updatedAt: now },
-    { id: 'm6', jornadaId: 'j1', competicion: 'segunda', equipoLocal: 'Málaga', equipoVisitante: 'Elche', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 0, golesVisitante: 2, updatedAt: now },
+    { id: 'm5', jornadaId: 'j1', orden: 1, competicion: 'laliga', equipoLocal: 'Valencia', equipoVisitante: 'Villarreal', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 1, golesVisitante: 1, esPlenoAl15: false, updatedAt: now },
+    { id: 'm6', jornadaId: 'j1', orden: 2, competicion: 'segunda', equipoLocal: 'Málaga', equipoVisitante: 'Elche', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 0, golesVisitante: 2, esPlenoAl15: false, updatedAt: now },
   ];
 
   const columnas: Columna[] = [
-    { id: 'c1', jornadaId: 'j2', playerId: 'p1', picks: { m1: '1', m2: 'X', m3: '1', m4: '2' } as Record<string, Signo>, createdAt: now, updatedAt: now },
-    { id: 'c2', jornadaId: 'j2', playerId: 'p2', picks: { m1: '1', m2: '1', m3: 'X', m4: '1' } as Record<string, Signo>, createdAt: now, updatedAt: now },
-    { id: 'c3', jornadaId: 'j2', playerId: 'p3', picks: { m1: 'X', m2: 'X', m3: '2', m4: '2' } as Record<string, Signo>, createdAt: now, updatedAt: now },
-    { id: 'c4', jornadaId: 'j1', playerId: 'p1', picks: { m5: 'X', m6: '2' } as Record<string, Signo>, createdAt: now, updatedAt: now },
-    { id: 'c5', jornadaId: 'j1', playerId: 'p2', picks: { m5: '1', m6: '2' } as Record<string, Signo>, createdAt: now, updatedAt: now },
-    { id: 'c6', jornadaId: 'j1', playerId: 'p3', picks: { m5: 'X', m6: '1' } as Record<string, Signo>, createdAt: now, updatedAt: now },
+    { id: 'c1', jornadaId: 'j2', playerId: 'p1', picks: { m1: '1', m2: 'X', m3: '1', m4: '2' }, createdAt: now, updatedAt: now },
+    { id: 'c2', jornadaId: 'j2', playerId: 'p2', picks: { m1: '1', m2: '1', m3: 'X', m4: '1' }, createdAt: now, updatedAt: now },
+    { id: 'c3', jornadaId: 'j2', playerId: 'p3', picks: { m1: 'X', m2: 'X', m3: '2', m4: '2' }, createdAt: now, updatedAt: now },
+    { id: 'c4', jornadaId: 'j1', playerId: 'p1', picks: { m5: 'X', m6: '2' }, createdAt: now, updatedAt: now },
+    { id: 'c5', jornadaId: 'j1', playerId: 'p2', picks: { m5: '1', m6: '2' }, createdAt: now, updatedAt: now },
+    { id: 'c6', jornadaId: 'j1', playerId: 'p3', picks: { m5: 'X', m6: '1' }, createdAt: now, updatedAt: now },
   ];
 
   const state: LocalState = {
@@ -88,6 +88,7 @@ function rowToPartido(row: any): Partido {
   return {
     id: row.id,
     jornadaId: row.jornada_id,
+    orden: row.orden,
     competicion: row.competicion,
     equipoLocal: row.equipo_local,
     equipoVisitante: row.equipo_visitante,
@@ -96,6 +97,7 @@ function rowToPartido(row: any): Partido {
     estado: row.estado,
     golesLocal: row.goles_local,
     golesVisitante: row.goles_visitante,
+    esPlenoAl15: row.es_pleno_al_15 ?? false,
     updatedAt: row.updated_at,
   };
 }
@@ -175,15 +177,21 @@ export const dbService = {
   },
 
   async listPartidos(jornadaId: string): Promise<Partido[]> {
-    if (!supabase) return getLocalState().partidos.filter((p) => p.jornadaId === jornadaId);
+    if (!supabase) {
+      return getLocalState()
+        .partidos.filter((p) => p.jornadaId === jornadaId)
+        .sort((a, b) => a.orden - b.orden);
+    }
     const { data, error } = await supabase
       .from('quiniela_partidos')
       .select('*')
       .eq('jornada_id', jornadaId)
-      .order('kickoff_at');
+      .order('orden');
     if (error) {
       console.warn('Supabase listPartidos falló, usando estado local:', error.message);
-      return getLocalState().partidos.filter((p) => p.jornadaId === jornadaId);
+      return getLocalState()
+        .partidos.filter((p) => p.jornadaId === jornadaId)
+        .sort((a, b) => a.orden - b.orden);
     }
     return (data ?? []).map(rowToPartido);
   },
@@ -210,6 +218,7 @@ export const dbService = {
       .from('quiniela_partidos')
       .insert({
         jornada_id: input.jornadaId,
+        orden: input.orden,
         competicion: input.competicion,
         equipo_local: input.equipoLocal,
         equipo_visitante: input.equipoVisitante,
@@ -218,6 +227,7 @@ export const dbService = {
         estado: input.estado,
         goles_local: input.golesLocal,
         goles_visitante: input.golesVisitante,
+        es_pleno_al_15: input.esPlenoAl15,
       })
       .select()
       .single();
@@ -234,6 +244,7 @@ export const dbService = {
       return;
     }
     const dbPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (patch.orden !== undefined) dbPatch.orden = patch.orden;
     if (patch.competicion !== undefined) dbPatch.competicion = patch.competicion;
     if (patch.equipoLocal !== undefined) dbPatch.equipo_local = patch.equipoLocal;
     if (patch.equipoVisitante !== undefined) dbPatch.equipo_visitante = patch.equipoVisitante;
@@ -242,6 +253,7 @@ export const dbService = {
     if (patch.estado !== undefined) dbPatch.estado = patch.estado;
     if (patch.golesLocal !== undefined) dbPatch.goles_local = patch.golesLocal;
     if (patch.golesVisitante !== undefined) dbPatch.goles_visitante = patch.golesVisitante;
+    if (patch.esPlenoAl15 !== undefined) dbPatch.es_pleno_al_15 = patch.esPlenoAl15;
     const { error } = await supabase.from('quiniela_partidos').update(dbPatch).eq('id', id);
     if (error) throw error;
   },
@@ -277,7 +289,7 @@ export const dbService = {
     return (data ?? []).map(rowToColumna);
   },
 
-  async upsertColumna(jornadaId: string, playerId: string, picks: Record<string, Signo>): Promise<Columna> {
+  async upsertColumna(jornadaId: string, playerId: string, picks: Record<string, string>): Promise<Columna> {
     if (!supabase) {
       const state = getLocalState();
       const existing = state.columnas.find((c) => c.jornadaId === jornadaId && c.playerId === playerId);
@@ -338,10 +350,14 @@ CREATE TABLE IF NOT EXISTS public.quiniela_jornadas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Partidos de cada jornada (1ª, 2ª y Liga F mezclados)
+-- Partidos de cada jornada (1ª, 2ª y Liga F mezclados). "orden" fija el
+-- número de partido dentro de la jornada (1-7 Primera, 8-10 Segunda,
+-- 11-14 Liga F, como en la quiniela oficial) y es lo que decide el orden
+-- de aparición en pantalla, no la hora de inicio.
 CREATE TABLE IF NOT EXISTS public.quiniela_partidos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     jornada_id UUID NOT NULL REFERENCES public.quiniela_jornadas(id) ON DELETE CASCADE,
+    orden INTEGER NOT NULL DEFAULT 1,
     competicion TEXT NOT NULL CHECK (competicion IN ('laliga', 'segunda', 'ligaf')),
     equipo_local TEXT NOT NULL,
     equipo_visitante TEXT NOT NULL,
@@ -350,8 +366,15 @@ CREATE TABLE IF NOT EXISTS public.quiniela_partidos (
     estado TEXT NOT NULL DEFAULT 'programado' CHECK (estado IN ('programado', 'en_juego', 'finalizado')),
     goles_local INTEGER,
     goles_visitante INTEGER,
+    -- Pleno al 15: el pronóstico de este partido es un marcador exacto, no
+    -- un signo 1X2 (con más de 8 columnas puede haber varios en la misma jornada).
+    es_pleno_al_15 BOOLEAN NOT NULL DEFAULT false,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Migración idempotente por si la tabla ya existía sin estas columnas.
+ALTER TABLE public.quiniela_partidos ADD COLUMN IF NOT EXISTS orden INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE public.quiniela_partidos ADD COLUMN IF NOT EXISTS es_pleno_al_15 BOOLEAN NOT NULL DEFAULT false;
 
 -- Columna (pronóstico 1X2) de un jugador para una jornada
 CREATE TABLE IF NOT EXISTS public.quiniela_columnas (

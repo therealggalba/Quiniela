@@ -9,6 +9,20 @@ export const COMPETICION_LABEL: Record<Competicion, string> = {
   ligaf: 'Liga F',
 };
 
+/**
+ * Rango de números de partido (orden dentro de la jornada) reservado a cada
+ * competición, como en la quiniela oficial: 1-7 Primera, 8-10 Segunda,
+ * 11-14 Liga F. Es solo una guía para el selector del admin, no se fuerza.
+ */
+export const COMPETICION_SLOT_RANGE: Record<Competicion, [number, number]> = {
+  laliga: [1, 7],
+  segunda: [8, 10],
+  ligaf: [11, 14],
+};
+
+/** Jugadores habituales de la peña — plantilla para no tener que teclearlos cada vez. */
+export const PRESET_PLAYERS = ['GMR', 'DCB', 'CRS', 'MPF', 'HRQ', 'AFM', 'YAB', 'CDS', 'JGL', 'DPF'];
+
 export interface Player {
   id: string;
   name: string;
@@ -25,6 +39,7 @@ export interface Jornada {
 export interface Partido {
   id: string;
   jornadaId: string;
+  orden: number;
   competicion: Competicion;
   equipoLocal: string;
   equipoVisitante: string;
@@ -33,6 +48,8 @@ export interface Partido {
   estado: EstadoPartido;
   golesLocal: number | null;
   golesVisitante: number | null;
+  /** Pleno al 15: el pronóstico es un marcador exacto, no un signo 1X2. */
+  esPlenoAl15: boolean;
   updatedAt: string;
 }
 
@@ -40,7 +57,8 @@ export interface Columna {
   id: string;
   jornadaId: string;
   playerId: string;
-  picks: Record<string, Signo>;
+  /** Signo (1/X/2) para partidos normales, o "H-A" (marcador exacto) para Pleno al 15. */
+  picks: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,8 +73,13 @@ export function signoReal(partido: Partido): Signo | null {
   return 'X';
 }
 
-/** true = acierto, false = fallo, null = partido aún sin resolver o sin pronóstico. */
-export function resultadoPick(partido: Partido, pick: Signo | undefined): boolean | null {
+/**
+ * true = acierto, false = fallo, null = partido aún sin resolver, sin
+ * pronóstico, o es un partido de Pleno al 15 (esos no se colorean: se
+ * muestra el marcador elegido tal cual, sin acierto/fallo).
+ */
+export function resultadoPick(partido: Partido, pick: string | undefined): boolean | null {
+  if (partido.esPlenoAl15) return null;
   const real = signoReal(partido);
   if (real === null || !pick) return null;
   return pick === real;

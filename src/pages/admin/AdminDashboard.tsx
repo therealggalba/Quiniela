@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { TeamSelect } from '../../components/TeamSelect';
 import { dbService } from '../../dbService';
 import {
   COMPETICION_LABEL,
+  COMPETICION_SLOT_RANGE,
+  PRESET_PLAYERS,
   type Columna,
   type Competicion,
   type EstadoJornada,
@@ -15,6 +18,24 @@ import { supabase } from '../../lib/supabaseClient';
 
 const COMPETICIONES: Competicion[] = ['laliga', 'segunda', 'ligaf'];
 const SIGNOS: Signo[] = ['1', 'X', '2'];
+const ESTADO_JORNADA_LABEL: Record<EstadoJornada, string> = {
+  abierta: 'Abierta',
+  en_juego: 'En juego',
+  cerrada: 'Cerrada',
+};
+
+function suggestCompeticion(orden: number): Competicion {
+  for (const c of COMPETICIONES) {
+    const [min, max] = COMPETICION_SLOT_RANGE[c];
+    if (orden >= min && orden <= max) return c;
+  }
+  return 'ligaf';
+}
+
+function parsePleno(value: string | undefined): [string, string] {
+  const [h, a] = (value ?? '-').split('-');
+  return [h === '-' ? '' : (h ?? ''), a === '-' ? '' : (a ?? '')];
+}
 
 export function AdminDashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -22,6 +43,7 @@ export function AdminDashboard() {
   const [selectedJornadaId, setSelectedJornadaId] = useState<string | null>(null);
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [columnas, setColumnas] = useState<Columna[]>([]);
+  const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newJornadaNumero, setNewJornadaNumero] = useState('');
@@ -32,10 +54,22 @@ export function AdminDashboard() {
     equipoVisitante: '',
     kickoffAt: '',
     apiFixtureId: '',
+    esPlenoAl15: false,
   });
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [draftPicks, setDraftPicks] = useState<Record<string, Signo>>({});
+  const [draftPicks, setDraftPicks] = useState<Record<string, string>>({});
+
+  async function runAction(action: () => Promise<void>, successMessage?: string) {
+    setFeedback(null);
+    try {
+      await action();
+      if (successMessage) setFeedback({ type: 'success', message: successMessage });
+    } catch (e) {
+      console.error(e);
+      setFeedback({ type: 'error', message: e instanceof Error ? e.message : 'Error desconocido' });
+    }
+  }
 
   async function refreshPlayers() {
     setPlayers(await dbService.listPlayers());
@@ -83,53 +117,84 @@ export function AdminDashboard() {
     setDraftPicks(existing ? { ...existing.picks } : {});
   }, [selectedPlayerId, columnas]);
 
+  // Sugiere la siguiente competición según el hueco de la quiniela oficial
+  // (1-7 Primera, 8-10 Segunda, 11-14 Liga F) cada vez que se añade un partido.
+  useEffect(() => {
+    setNewPartido((prev) => ({ ...prev, competicion: suggestCompeticion(partidos.length + 1), equipoLocal: '', equipoVisitante: '' }));
+  }, [partidos.length]);
+
   const selectedJornada = jornadas.find((j) => j.id === selectedJornadaId) ?? null;
 
   async function handleAddPlayer() {
     const name = newPlayerName.trim();
     if (!name) return;
-    await dbService.createPlayer(name);
-    setNewPlayerName('');
-    await refreshPlayers();
+    await runAction(async () => {
+      await dbService.createPlayer(name);
+      setNewPlayerName('');
+      await refreshPlayers();
+    });
+  }
+
+  async function handleLoadTemplate() {
+    await runAction(async () => {
+      const existingNames = new Set(players.map((p) => p.name));
+      for (const name of PRESET_PLAYERS) {
+        if (!existingNames.has(name)) await dbService.createPlayer(name);
+      }
+      await refreshPlayers();
+    }, 'Plantilla cargada');
   }
 
   async function handleAddJornada() {
     const numero = Number(newJornadaNumero);
     if (!numero) return;
-    const jornada = await dbService.createJornada(numero);
-    setNewJornadaNumero('');
-    await refreshJornadas();
-    setSelectedJornadaId(jornada.id);
+    await runAction(async () => {
+      const jornada = await dbService.createJornada(numero);
+      setNewJornadaNumero('');
+      await refreshJornadas();
+      setSelectedJornadaId(jornada.id);
+    }, `Jornada ${numero} creada (abierta)`);
   }
 
   async function handleSetEstado(estado: EstadoJornada) {
     if (!selectedJornadaId) return;
-    await dbService.setJornadaEstado(selectedJornadaId, estado);
-    await refreshJornadas();
+    await runAction(async () => {
+      await dbService.setJornadaEstado(selectedJornadaId, estado);
+      await refreshJornadas();
+    }, `Jornada marcada como ${ESTADO_JORNADA_LABEL[estado].toLowerCase()}`);
   }
 
   async function handleAddPartido() {
     if (!selectedJornadaId) return;
-    if (!newPartido.equipoLocal.trim() || !newPartido.equipoVisitante.trim() || !newPartido.kickoffAt) return;
-    await dbService.createPartido({
-      jornadaId: selectedJornadaId,
-      competicion: newPartido.competicion,
-      equipoLocal: newPartido.equipoLocal.trim(),
-      equipoVisitante: newPartido.equipoVisitante.trim(),
-      apiFixtureId: newPartido.apiFixtureId ? Number(newPartido.apiFixtureId) : null,
-      kickoffAt: new Date(newPartido.kickoffAt).toISOString(),
-      estado: 'programado',
-      golesLocal: null,
-      golesVisitante: null,
-    });
-    setNewPartido({ competicion: 'laliga', equipoLocal: '', equipoVisitante: '', kickoffAt: '', apiFixtureId: '' });
-    await refreshJornadaData(selectedJornadaId);
+    if (!newPartido.equipoLocal.trim() || !newPartido.equipoVisitante.trim() || !newPartido.kickoffAt) {
+      setFeedback({ type: 'error', message: 'Rellena equipos y hora antes de añadir el partido.' });
+      return;
+    }
+    await runAction(async () => {
+      await dbService.createPartido({
+        jornadaId: selectedJornadaId,
+        orden: partidos.length + 1,
+        competicion: newPartido.competicion,
+        equipoLocal: newPartido.equipoLocal.trim(),
+        equipoVisitante: newPartido.equipoVisitante.trim(),
+        apiFixtureId: newPartido.apiFixtureId ? Number(newPartido.apiFixtureId) : null,
+        kickoffAt: new Date(newPartido.kickoffAt).toISOString(),
+        estado: 'programado',
+        golesLocal: null,
+        golesVisitante: null,
+        esPlenoAl15: newPartido.esPlenoAl15,
+      });
+      setNewPartido((prev) => ({ ...prev, equipoLocal: '', equipoVisitante: '', kickoffAt: '', apiFixtureId: '', esPlenoAl15: false }));
+      await refreshJornadaData(selectedJornadaId);
+    }, 'Partido añadido');
   }
 
   async function handleDeletePartido(id: string) {
     if (!selectedJornadaId) return;
-    await dbService.deletePartido(id);
-    await refreshJornadaData(selectedJornadaId);
+    await runAction(async () => {
+      await dbService.deletePartido(id);
+      await refreshJornadaData(selectedJornadaId);
+    }, 'Partido eliminado');
   }
 
   async function handleResultado(partido: Partido, golesLocal: string, golesVisitante: string) {
@@ -137,25 +202,41 @@ export function AdminDashboard() {
     const gl = golesLocal === '' ? null : Number(golesLocal);
     const gv = golesVisitante === '' ? null : Number(golesVisitante);
     const estado: EstadoPartido = gl !== null && gv !== null ? 'finalizado' : partido.estado;
-    await dbService.updatePartido(partido.id, { golesLocal: gl, golesVisitante: gv, estado });
-    await refreshJornadaData(selectedJornadaId);
+    await runAction(async () => {
+      await dbService.updatePartido(partido.id, { golesLocal: gl, golesVisitante: gv, estado });
+      await refreshJornadaData(selectedJornadaId);
+    });
   }
 
   async function handleEstadoPartido(partido: Partido, estado: EstadoPartido) {
     if (!selectedJornadaId) return;
-    await dbService.updatePartido(partido.id, { estado });
-    await refreshJornadaData(selectedJornadaId);
+    await runAction(async () => {
+      await dbService.updatePartido(partido.id, { estado });
+      await refreshJornadaData(selectedJornadaId);
+    });
   }
 
   function setPick(partidoId: string, signo: Signo) {
     setDraftPicks((prev) => ({ ...prev, [partidoId]: signo }));
   }
 
+  function setPlenoPick(partidoId: string, golesLocal: string, golesVisitante: string) {
+    setDraftPicks((prev) => ({ ...prev, [partidoId]: `${golesLocal}-${golesVisitante}` }));
+  }
+
   async function handleSaveColumna() {
     if (!selectedJornadaId || !selectedPlayerId) return;
-    await dbService.upsertColumna(selectedJornadaId, selectedPlayerId, draftPicks);
-    await refreshJornadaData(selectedJornadaId);
+    await runAction(async () => {
+      await dbService.upsertColumna(selectedJornadaId, selectedPlayerId, draftPicks);
+      await refreshJornadaData(selectedJornadaId);
+    }, 'Columna guardada');
   }
+
+  const conteoPorCompeticion = COMPETICIONES.map((c) => ({
+    competicion: c,
+    count: partidos.filter((p) => p.competicion === c).length,
+    range: COMPETICION_SLOT_RANGE[c],
+  }));
 
   return (
     <div className="admin-shell">
@@ -166,11 +247,13 @@ export function AdminDashboard() {
         </button>
       </div>
 
+      {feedback && <div className={feedback.type === 'error' ? 'field-error' : 'field-success'}>{feedback.message}</div>}
+
       <section className="admin-section">
-        <h2>Jugadores</h2>
+        <h2>Jugadores ({players.length})</h2>
         <div className="form-row">
           <input
-            placeholder="Nombre del jugador"
+            placeholder="Nombre / iniciales"
             value={newPlayerName}
             onChange={(e) => setNewPlayerName(e.target.value)}
           />
@@ -178,11 +261,19 @@ export function AdminDashboard() {
             Añadir
           </button>
         </div>
-        {players.map((p) => (
-          <div key={p.id} className="list-item">
-            <span>{p.name}</span>
+        <details className="players-details">
+          <summary>Ver / gestionar jugadores</summary>
+          <button type="button" className="btn" style={{ margin: '0.5rem 0' }} onClick={handleLoadTemplate}>
+            Cargar plantilla habitual
+          </button>
+          <div className="players-grid">
+            {players.map((p) => (
+              <span key={p.id} className="player-chip">
+                {p.name}
+              </span>
+            ))}
           </div>
-        ))}
+        </details>
       </section>
 
       <section className="admin-section">
@@ -202,21 +293,21 @@ export function AdminDashboard() {
           <option value="">— Selecciona una jornada —</option>
           {jornadas.map((j) => (
             <option key={j.id} value={j.id}>
-              Jornada {j.numero} ({j.estado})
+              Jornada {j.numero} ({ESTADO_JORNADA_LABEL[j.estado]})
             </option>
           ))}
         </select>
         {selectedJornada && (
-          <div className="form-row" style={{ marginTop: '0.5rem' }}>
+          <div className="segmented" style={{ marginTop: '0.5rem' }}>
             {(['abierta', 'en_juego', 'cerrada'] as EstadoJornada[]).map((estado) => (
               <button
                 key={estado}
                 type="button"
-                className="btn"
+                className={selectedJornada.estado === estado ? 'active' : ''}
                 disabled={selectedJornada.estado === estado}
                 onClick={() => handleSetEstado(estado)}
               >
-                Marcar {estado.replace('_', ' ')}
+                {ESTADO_JORNADA_LABEL[estado]}
               </button>
             ))}
           </div>
@@ -227,6 +318,13 @@ export function AdminDashboard() {
         <>
           <section className="admin-section">
             <h2>Partidos — Jornada {selectedJornada.numero}</h2>
+            <p className="slot-progress">
+              {conteoPorCompeticion.map(({ competicion, count, range }) => (
+                <span key={competicion}>
+                  {COMPETICION_LABEL[competicion]} {count}/{range[1] - range[0] + 1}
+                </span>
+              ))}
+            </p>
             <div className="form-row">
               <select
                 value={newPartido.competicion}
@@ -238,15 +336,17 @@ export function AdminDashboard() {
                   </option>
                 ))}
               </select>
-              <input
-                placeholder="Equipo local"
+              <TeamSelect
+                competicion={newPartido.competicion}
                 value={newPartido.equipoLocal}
-                onChange={(e) => setNewPartido({ ...newPartido, equipoLocal: e.target.value })}
+                onChange={(v) => setNewPartido({ ...newPartido, equipoLocal: v })}
+                placeholder="Equipo local"
               />
-              <input
-                placeholder="Equipo visitante"
+              <TeamSelect
+                competicion={newPartido.competicion}
                 value={newPartido.equipoVisitante}
-                onChange={(e) => setNewPartido({ ...newPartido, equipoVisitante: e.target.value })}
+                onChange={(v) => setNewPartido({ ...newPartido, equipoVisitante: v })}
+                placeholder="Equipo visitante"
               />
             </div>
             <div className="form-row">
@@ -260,8 +360,18 @@ export function AdminDashboard() {
                 value={newPartido.apiFixtureId}
                 onChange={(e) => setNewPartido({ ...newPartido, apiFixtureId: e.target.value })}
               />
+            </div>
+            <div className="form-row" style={{ alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+                <input
+                  type="checkbox"
+                  checked={newPartido.esPlenoAl15}
+                  onChange={(e) => setNewPartido({ ...newPartido, esPlenoAl15: e.target.checked })}
+                />
+                Pleno al 15 (marcador exacto)
+              </label>
               <button type="button" className="btn btn-primary" onClick={handleAddPartido}>
-                Añadir partido
+                Añadir partido #{partidos.length + 1}
               </button>
             </div>
 
@@ -269,7 +379,8 @@ export function AdminDashboard() {
               <div key={partido.id} className="list-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.4rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>
-                    {COMPETICION_LABEL[partido.competicion]}: {partido.equipoLocal} – {partido.equipoVisitante}
+                    #{partido.orden} {COMPETICION_LABEL[partido.competicion]}: {partido.equipoLocal} – {partido.equipoVisitante}
+                    {partido.esPlenoAl15 && ' 🎯'}
                   </span>
                   <button type="button" className="btn btn-danger" onClick={() => handleDeletePartido(partido.id)}>
                     Eliminar
@@ -314,25 +425,47 @@ export function AdminDashboard() {
             )}
 
             {selectedPlayerId &&
-              partidos.map((partido) => (
-                <div key={partido.id} style={{ margin: '0.6rem 0' }}>
-                  <div style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                    {partido.equipoLocal} – {partido.equipoVisitante}
+              partidos.map((partido) => {
+                const [golesLocal, golesVisitante] = parsePleno(draftPicks[partido.id]);
+                return (
+                  <div key={partido.id} style={{ margin: '0.6rem 0' }}>
+                    <div style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                      #{partido.orden} {partido.equipoLocal} – {partido.equipoVisitante}
+                    </div>
+                    {partido.esPlenoAl15 ? (
+                      <div className="form-row">
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Goles local"
+                          value={golesLocal}
+                          onChange={(e) => setPlenoPick(partido.id, e.target.value, golesVisitante)}
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Goles visitante"
+                          value={golesVisitante}
+                          onChange={(e) => setPlenoPick(partido.id, golesLocal, e.target.value)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="pick-selector">
+                        {SIGNOS.map((signo) => (
+                          <button
+                            key={signo}
+                            type="button"
+                            className={draftPicks[partido.id] === signo ? 'selected' : ''}
+                            onClick={() => setPick(partido.id, signo)}
+                          >
+                            {signo}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="pick-selector">
-                    {SIGNOS.map((signo) => (
-                      <button
-                        key={signo}
-                        type="button"
-                        className={draftPicks[partido.id] === signo ? 'selected' : ''}
-                        onClick={() => setPick(partido.id, signo)}
-                      >
-                        {signo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
             {selectedPlayerId && partidos.length > 0 && (
               <button type="button" className="btn btn-primary" onClick={handleSaveColumna}>
