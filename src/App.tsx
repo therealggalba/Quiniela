@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import { BottomNav } from './components/BottomNav';
 import { AdminPage } from './pages/AdminPage';
@@ -19,6 +19,11 @@ function Shell() {
     <div className="app-shell">
       <header className="app-header">
         <h1>Quiniela</h1>
+        {!isAdmin && (
+          <Link to="/admin" className="admin-entry" aria-label="Modo edición">
+            🔒
+          </Link>
+        )}
       </header>
       <main className="app-main">
         <Routes>
