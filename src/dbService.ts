@@ -43,8 +43,8 @@ function seedDemoState(): LocalState {
     { id: 'p2', name: 'Marta', createdAt: now },
     { id: 'p3', name: 'Iván', createdAt: now },
   ];
-  const jornadaLive: Jornada = { id: 'j2', numero: 2, estado: 'en_juego', createdAt: now };
-  const jornadaClosed: Jornada = { id: 'j1', numero: 1, estado: 'cerrada', createdAt: now };
+  const jornadaLive: Jornada = { id: 'j2', numero: 2, estado: 'en_juego', pagadorPlayerId: null, createdAt: now };
+  const jornadaClosed: Jornada = { id: 'j1', numero: 1, estado: 'cerrada', pagadorPlayerId: 'p1', createdAt: now };
 
   const partidosLive: Partido[] = [
     { id: 'm1', jornadaId: 'j2', orden: 1, competicion: 'laliga', equipoLocal: 'Real Madrid', equipoVisitante: 'Betis', apiFixtureId: null, kickoffAt: now, estado: 'finalizado', golesLocal: 2, golesVisitante: 0, esPlenoAl15: false, plenoAl15Local: null, plenoAl15Visitante: null, updatedAt: now },
@@ -83,7 +83,13 @@ function rowToPlayer(row: any): Player {
 }
 
 function rowToJornada(row: any): Jornada {
-  return { id: row.id, numero: row.numero, estado: row.estado, createdAt: row.created_at };
+  return {
+    id: row.id,
+    numero: row.numero,
+    estado: row.estado,
+    pagadorPlayerId: row.pagador_player_id ?? null,
+    createdAt: row.created_at,
+  };
 }
 
 function rowToPartido(row: any): Partido {
@@ -158,7 +164,13 @@ export const dbService = {
   async createJornada(numero: number): Promise<Jornada> {
     if (!supabase) {
       const state = getLocalState();
-      const jornada: Jornada = { id: crypto.randomUUID(), numero, estado: 'abierta', createdAt: new Date().toISOString() };
+      const jornada: Jornada = {
+        id: crypto.randomUUID(),
+        numero,
+        estado: 'abierta',
+        pagadorPlayerId: null,
+        createdAt: new Date().toISOString(),
+      };
       state.jornadas.push(jornada);
       saveLocalState(state);
       return jornada;
@@ -177,6 +189,18 @@ export const dbService = {
       return;
     }
     const { error } = await supabase.from('quiniela_jornadas').update({ estado }).eq('id', id);
+    if (error) throw error;
+  },
+
+  async setPagador(id: string, playerId: string | null): Promise<void> {
+    if (!supabase) {
+      const state = getLocalState();
+      const jornada = state.jornadas.find((j) => j.id === id);
+      if (jornada) jornada.pagadorPlayerId = playerId;
+      saveLocalState(state);
+      return;
+    }
+    const { error } = await supabase.from('quiniela_jornadas').update({ pagador_player_id: playerId }).eq('id', id);
     if (error) throw error;
   },
 
@@ -340,6 +364,22 @@ export const dbService = {
     return rowToColumna(data);
   },
 
+  /** Quita a un jugador de la jornada (deja de "participar": desaparece de la quiniela de esa semana). */
+  async deleteColumna(jornadaId: string, playerId: string): Promise<void> {
+    if (!supabase) {
+      const state = getLocalState();
+      state.columnas = state.columnas.filter((c) => !(c.jornadaId === jornadaId && c.playerId === playerId));
+      saveLocalState(state);
+      return;
+    }
+    const { error } = await supabase
+      .from('quiniela_columnas')
+      .delete()
+      .eq('jornada_id', jornadaId)
+      .eq('player_id', playerId);
+    if (error) throw error;
+  },
+
   /** DDL para pegar una vez en el editor SQL de Supabase. */
   getDDL(): string {
     return `
@@ -350,13 +390,18 @@ CREATE TABLE IF NOT EXISTS public.quiniela_players (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Jornadas
+-- Jornadas. pagador_player_id: quién puso el dinero de esa jornada (para
+-- la cuenta de jornadas pagadas que se muestra en la Clasificación).
 CREATE TABLE IF NOT EXISTS public.quiniela_jornadas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     numero INTEGER NOT NULL,
     estado TEXT NOT NULL DEFAULT 'abierta' CHECK (estado IN ('abierta', 'en_juego', 'cerrada')),
+    pagador_player_id UUID REFERENCES public.quiniela_players(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Migración idempotente por si la tabla ya existía sin esta columna.
+ALTER TABLE public.quiniela_jornadas ADD COLUMN IF NOT EXISTS pagador_player_id UUID REFERENCES public.quiniela_players(id) ON DELETE SET NULL;
 
 -- Partidos de cada jornada (1ª, 2ª y Liga F mezclados). "orden" fija el
 -- número de partido dentro de la jornada (1-7 Primera, 8-10 Segunda,

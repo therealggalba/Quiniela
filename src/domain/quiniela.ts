@@ -37,6 +37,8 @@ export interface Jornada {
   id: string;
   numero: number;
   estado: EstadoJornada;
+  /** Jugador que puso el dinero de esta jornada (para llevar la cuenta en la clasificación). */
+  pagadorPlayerId: string | null;
   createdAt: string;
 }
 
@@ -184,6 +186,16 @@ export function computeClasificacion(
   });
 
   return rows;
+}
+
+/** Nº de jornadas pagadas por cada jugador (cuenta sobre todas las jornadas, jugadas o no). */
+export function computeJornadasPagadasPorJugador(jornadas: Jornada[]): Map<string, number> {
+  const resultado = new Map<string, number>();
+  for (const jornada of jornadas) {
+    if (!jornada.pagadorPlayerId) continue;
+    resultado.set(jornada.pagadorPlayerId, (resultado.get(jornada.pagadorPlayerId) ?? 0) + 1);
+  }
+  return resultado;
 }
 
 /** Máximo de aciertos conseguido en cada jornada (para el listado del histórico). */

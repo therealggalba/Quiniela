@@ -73,6 +73,10 @@ export function Live() {
     return <div className="empty-state">Todavía no hay ninguna jornada creada.</div>;
   }
 
+  // Un jugador "participa" en la jornada si tiene columna creada esa semana
+  // (no todos juegan siempre) — se decide desde el admin, sección Columnas.
+  const jugadoresJornada = players.filter((p) => columnas.some((c) => c.playerId === p.id));
+
   return (
     <div>
       <div className="page" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: 0 }}>
@@ -80,7 +84,7 @@ export function Live() {
         <span className={`badge-estado ${jornada.estado}`}>{jornada.estado.replace('_', ' ')}</span>
       </div>
       <QuinielaTable
-        players={players}
+        players={jugadoresJornada}
         columnas={columnas}
         partidos={partidos}
         favoritePlayerId={favoritePlayerId}

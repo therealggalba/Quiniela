@@ -47,6 +47,7 @@ export function Historico() {
   if (loading) return <div className="empty-state">Cargando…</div>;
 
   if (seleccionada) {
+    const jugadoresJornada = players.filter((p) => columnas.some((c) => c.playerId === p.id));
     return (
       <div>
         <div className="page" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', paddingBottom: 0 }}>
@@ -56,7 +57,7 @@ export function Historico() {
           <h2 style={{ margin: 0, fontSize: '1rem' }}>Jornada {seleccionada.numero}</h2>
         </div>
         <QuinielaTable
-          players={players}
+          players={jugadoresJornada}
           columnas={columnas}
           partidos={partidos}
           favoritePlayerId={favoritePlayerId}

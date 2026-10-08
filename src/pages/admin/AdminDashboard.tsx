@@ -116,12 +116,6 @@ export function AdminDashboard() {
     setDraftPicks(existing ? { ...existing.picks } : {});
   }, [selectedPlayerId, columnas]);
 
-  // Sugiere la siguiente competición según el hueco de la quiniela oficial
-  // (1-7 Primera, 8-10 Segunda, 11-14 Liga F) cada vez que se añade un partido.
-  useEffect(() => {
-    setNewPartido((prev) => ({ ...prev, competicion: suggestCompeticion(partidos.length + 1), equipoLocal: '', equipoVisitante: '' }));
-  }, [partidos.length]);
-
   const selectedJornada = jornadas.find((j) => j.id === selectedJornadaId) ?? null;
 
   async function handleAddPlayer() {
@@ -163,6 +157,14 @@ export function AdminDashboard() {
     }, `Jornada marcada como ${ESTADO_JORNADA_LABEL[estado].toLowerCase()}`);
   }
 
+  async function handleSetPagador(playerId: string | null) {
+    if (!selectedJornadaId) return;
+    await runAction(async () => {
+      await dbService.setPagador(selectedJornadaId, playerId);
+      await refreshJornadas();
+    }, playerId ? 'Pagador guardado' : 'Pagador quitado');
+  }
+
   async function handleAddPartido() {
     if (!selectedJornadaId) return;
     if (!newPartido.equipoLocal.trim() || !newPartido.equipoVisitante.trim() || !newPartido.kickoffAt) {
@@ -185,7 +187,18 @@ export function AdminDashboard() {
         plenoAl15Local: null,
         plenoAl15Visitante: null,
       });
-      setNewPartido((prev) => ({ ...prev, equipoLocal: '', equipoVisitante: '', kickoffAt: '', apiFixtureId: '', esPlenoAl15: false }));
+      // Sugiere la competición del siguiente hueco como punto de partida (1-7
+      // Primera, 8-10 Segunda, 11-14 Liga F) — es solo un valor por defecto
+      // cómodo, no una obligación: se puede cambiar libremente antes de añadir.
+      setNewPartido((prev) => ({
+        ...prev,
+        competicion: suggestCompeticion(partidos.length + 2),
+        equipoLocal: '',
+        equipoVisitante: '',
+        kickoffAt: '',
+        apiFixtureId: '',
+        esPlenoAl15: false,
+      }));
       await refreshJornadaData(selectedJornadaId);
     }, 'Partido añadido');
   }
@@ -260,6 +273,20 @@ export function AdminDashboard() {
       await dbService.upsertColumna(selectedJornadaId, selectedPlayerId, draftPicks);
       await refreshJornadaData(selectedJornadaId);
     }, 'Columna guardada');
+  }
+
+  /** No todos juegan todas las semanas: decide aquí quién participa en esta jornada. */
+  async function handleToggleParticipacion(playerId: string, participaAhora: boolean) {
+    if (!selectedJornadaId) return;
+    await runAction(async () => {
+      if (participaAhora) {
+        await dbService.deleteColumna(selectedJornadaId, playerId);
+        if (selectedPlayerId === playerId) setSelectedPlayerId(null);
+      } else {
+        await dbService.upsertColumna(selectedJornadaId, playerId, {});
+      }
+      await refreshJornadaData(selectedJornadaId);
+    });
   }
 
   async function handleVolver() {
@@ -347,13 +374,30 @@ export function AdminDashboard() {
             ))}
           </div>
         )}
+
+        {selectedJornada && (
+          <div className="form-row" style={{ marginTop: '0.6rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>¿Quién paga esta jornada?</span>
+            <select
+              value={selectedJornada.pagadorPlayerId ?? ''}
+              onChange={(e) => handleSetPagador(e.target.value || null)}
+            >
+              <option value="">— Nadie (sin asignar) —</option>
+              {players.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </section>
 
       {selectedJornada && (
         <>
           <section className="admin-section">
             <h2>Partidos — Jornada {selectedJornada.numero}</h2>
-            <p className="slot-progress">
+            <p className="slot-progress" title="Solo orientativo: la competición de cada partido se elige libremente abajo.">
               {conteoPorCompeticion.map(({ competicion, count, range }) => (
                 <span key={competicion}>
                   {COMPETICION_LABEL[competicion]} {count}/{range[1] - range[0] + 1}
@@ -477,6 +521,24 @@ export function AdminDashboard() {
 
           <section className="admin-section">
             <h2>Columnas — Jornada {selectedJornada.numero}</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: '0 0 0.4rem' }}>
+              ¿Quién juega esta jornada? (no todos juegan todas las semanas)
+            </p>
+            <div className="players-grid" style={{ marginBottom: '0.75rem' }}>
+              {players.map((p) => {
+                const participa = columnas.some((c) => c.playerId === p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`player-chip player-chip--toggle ${participa ? 'active' : ''}`}
+                    onClick={() => handleToggleParticipacion(p.id, participa)}
+                  >
+                    {p.name}
+                  </button>
+                );
+              })}
+            </div>
             <select value={selectedPlayerId ?? ''} onChange={(e) => setSelectedPlayerId(e.target.value || null)}>
               <option value="">— Selecciona un jugador —</option>
               {players.map((p) => (

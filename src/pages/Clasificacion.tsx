@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { dbService } from '../dbService';
-import { computeClasificacion, type ClasificacionRow } from '../domain/quiniela';
+import { computeClasificacion, computeJornadasPagadasPorJugador, type ClasificacionRow } from '../domain/quiniela';
 
 export function Clasificacion() {
   const [rows, setRows] = useState<ClasificacionRow[]>([]);
+  const [jornadasPagadas, setJornadasPagadas] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export function Clasificacion() {
         dbService.listAllPartidos(),
       ]);
       setRows(computeClasificacion(players, jornadas, columnas, partidos));
+      setJornadasPagadas(computeJornadasPagadasPorJugador(jornadas));
       setLoading(false);
     }
     load();
@@ -39,15 +41,27 @@ export function Clasificacion() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.playerId}>
-              <td>{row.position}</td>
-              <td>{row.name}</td>
-              <td>{row.jornadasJugadas}</td>
-              <td>{row.jornadasGanadas}</td>
-              <td>{row.aciertosTotales}</td>
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const pagadas = jornadasPagadas.get(row.playerId) ?? 0;
+            return (
+              <tr key={row.playerId}>
+                <td>{row.position}</td>
+                <td>
+                  {row.name}
+                  {pagadas > 0 && (
+                    <span className="pago-dots" title={`${pagadas} jornada(s) pagada(s)`}>
+                      {Array.from({ length: pagadas }).map((_, i) => (
+                        <span key={i} className="pago-dot" />
+                      ))}
+                    </span>
+                  )}
+                </td>
+                <td>{row.jornadasJugadas}</td>
+                <td>{row.jornadasGanadas}</td>
+                <td>{row.aciertosTotales}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

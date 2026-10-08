@@ -435,6 +435,22 @@
   font-weight: 700;
 }
 
+/* Puntitos de jornadas pagadas, junto al nombre en la Clasificación */
+.pago-dots {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.pago-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
 /* Admin */
 .admin-shell {
   padding: 0.75rem 1rem 2rem;
@@ -568,6 +584,19 @@
   border: 1px solid var(--border);
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.player-chip--toggle {
+  cursor: pointer;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.player-chip--toggle.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  opacity: 1;
 }
 
 /* Control segmentado compacto (estado de jornada) */
