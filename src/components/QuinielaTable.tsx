@@ -113,8 +113,10 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
                 {plenoRef.equipoLocal} – {plenoRef.equipoVisitante}
               </span>
               <TeamBadge competicion={plenoRef.competicion} team={plenoRef.equipoVisitante} />
-              <span className="qt-match-cell__marcador">
-                {partidosPlenos.map((p) => `${p.plenoAl15Local ?? '?'}-${p.plenoAl15Visitante ?? '?'}`).join(' · ')}
+              {/* Resultado REAL del partido (igual que cualquier otro), no la porra — esa va en la columna de cada jugador. */}
+              <span className={`qt-match-cell__marcador ${plenoRef.estado === 'en_juego' ? 'live' : ''}`}>
+                {plenoRef.estado === 'en_juego' && <span className="live-dot" />}
+                {plenoRef.estado === 'programado' ? '–' : `${plenoRef.golesLocal ?? '-'}-${plenoRef.golesVisitante ?? '-'}`}
               </span>
             </div>
           )}
@@ -137,7 +139,12 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
                 })}
                 {plenoRef && (
                   <div className="qt-pick-cell">
-                    <span className="pick-badge pick-badge--muted">—</span>
+                    {/* La porra del Pleno al 15 es la misma para todos (no es un pronóstico
+                        individual), pero se muestra aquí, en la columna de cada jugador —
+                        no en la parte fija de partidos, que es solo para el resultado real. */}
+                    <span className="pick-badge pick-badge--score">
+                      {partidosPlenos.map((p) => `${p.plenoAl15Local ?? '?'}-${p.plenoAl15Visitante ?? '?'}`).join(' · ')}
+                    </span>
                   </div>
                 )}
               </div>

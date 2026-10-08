@@ -465,9 +465,28 @@ export function AdminDashboard() {
                     Eliminar
                   </button>
                 </div>
-                {partido.esPlenoAl15 ? (
+                <div className="form-row">
+                  <input
+                    type="number"
+                    placeholder="Goles local"
+                    defaultValue={partido.golesLocal ?? ''}
+                    onBlur={(e) => handleResultado(partido, e.target.value, String(partido.golesVisitante ?? ''))}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Goles visitante"
+                    defaultValue={partido.golesVisitante ?? ''}
+                    onBlur={(e) => handleResultado(partido, String(partido.golesLocal ?? ''), e.target.value)}
+                  />
+                  <select value={partido.estado} onChange={(e) => handleEstadoPartido(partido, e.target.value as EstadoPartido)}>
+                    <option value="programado">Programado</option>
+                    <option value="en_juego">En juego</option>
+                    <option value="finalizado">Finalizado</option>
+                  </select>
+                </div>
+                {partido.esPlenoAl15 && (
                   <div className="form-row" style={{ alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem' }}>Local</span>
+                    <span style={{ fontSize: '0.8rem' }}>Porra — Local</span>
                     <div className="segmented">
                       {PLENO_AL_15_OPCIONES.map((v) => (
                         <button
@@ -493,26 +512,6 @@ export function AdminDashboard() {
                         </button>
                       ))}
                     </div>
-                  </div>
-                ) : (
-                  <div className="form-row">
-                    <input
-                      type="number"
-                      placeholder="Goles local"
-                      defaultValue={partido.golesLocal ?? ''}
-                      onBlur={(e) => handleResultado(partido, e.target.value, String(partido.golesVisitante ?? ''))}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Goles visitante"
-                      defaultValue={partido.golesVisitante ?? ''}
-                      onBlur={(e) => handleResultado(partido, String(partido.golesLocal ?? ''), e.target.value)}
-                    />
-                    <select value={partido.estado} onChange={(e) => handleEstadoPartido(partido, e.target.value as EstadoPartido)}>
-                      <option value="programado">Programado</option>
-                      <option value="en_juego">En juego</option>
-                      <option value="finalizado">Finalizado</option>
-                    </select>
                   </div>
                 )}
               </div>
