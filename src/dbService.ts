@@ -151,6 +151,31 @@ export const dbService = {
     return rowToPlayer(data);
   },
 
+  /**
+   * Borra al jugador del todo. En Supabase sus columnas se eliminan en cascada
+   * (FK ON DELETE CASCADE) y las jornadas que pagó quedan sin pagador
+   * (ON DELETE SET NULL); en modo local se replica a mano.
+   */
+  async deletePlayer(id: string): Promise<void> {
+    if (!supabase) {
+      const state = getLocalState();
+      state.players = state.players.filter((p) => p.id !== id);
+      state.columnas = state.columnas.filter((c) => c.playerId !== id);
+      state.jornadas.forEach((j) => {
+        if (j.pagadorPlayerId === id) j.pagadorPlayerId = null;
+      });
+      saveLocalState(state);
+      return;
+    }
+    // RLS rechaza en silencio (0 filas, sin error) si la sesión no es la del creador:
+    // se pide la fila borrada de vuelta para poder detectarlo.
+    const { data, error } = await supabase.from('quiniela_players').delete().eq('id', id).select('id');
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error('No se pudo eliminar el jugador (¿sesión caducada o sin permiso?).');
+    }
+  },
+
   async listJornadas(): Promise<Jornada[]> {
     if (!supabase) return getLocalState().jornadas.sort((a, b) => b.numero - a.numero);
     const { data, error } = await supabase.from('quiniela_jornadas').select('*').order('numero', { ascending: false });

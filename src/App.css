@@ -586,6 +586,17 @@
   font-weight: 600;
 }
 
+.player-chip__remove {
+  margin-left: 0.4rem;
+  padding: 0 0.15rem;
+  background: none;
+  border: none;
+  color: var(--miss);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .player-chip--toggle {
   cursor: pointer;
   color: var(--text-dim);

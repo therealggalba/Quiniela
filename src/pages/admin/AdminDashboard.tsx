@@ -128,6 +128,27 @@ export function AdminDashboard() {
     });
   }
 
+  async function handleDeletePlayer(player: Player) {
+    const todas = await dbService.listAllColumnas();
+    const nColumnas = todas.filter((c) => c.playerId === player.id).length;
+    const nPagadas = jornadas.filter((j) => j.pagadorPlayerId === player.id).length;
+    const avisos = [
+      nColumnas > 0 ? `${nColumnas} columna(s) de jornadas (con sus aciertos)` : null,
+      nPagadas > 0 ? `${nPagadas} jornada(s) pagada(s) quedarán sin pagador` : null,
+    ].filter(Boolean);
+    const detalle = avisos.length > 0 ? `\n\nSe perderán: ${avisos.join('; ')}.` : '';
+    if (!window.confirm(`¿Eliminar a "${player.name}" de la lista de jugadores?${detalle}\n\nNo se puede deshacer.`)) {
+      return;
+    }
+    await runAction(async () => {
+      await dbService.deletePlayer(player.id);
+      if (selectedPlayerId === player.id) setSelectedPlayerId(null);
+      await refreshPlayers();
+      await refreshJornadas();
+      if (selectedJornadaId) await refreshJornadaData(selectedJornadaId);
+    }, `Jugador ${player.name} eliminado`);
+  }
+
   async function handleLoadTemplate() {
     await runAction(async () => {
       const existingNames = new Set(players.map((p) => p.name));
@@ -332,6 +353,15 @@ export function AdminDashboard() {
             {players.map((p) => (
               <span key={p.id} className="player-chip">
                 {p.name}
+                <button
+                  type="button"
+                  className="player-chip__remove"
+                  aria-label={`Eliminar a ${p.name}`}
+                  title={`Eliminar a ${p.name}`}
+                  onClick={() => handleDeletePlayer(p)}
+                >
+                  ×
+                </button>
               </span>
             ))}
           </div>
