@@ -8,4 +8,8 @@ export default defineConfig(({ command }) => ({
   // (`vite dev`) se mantiene en la raíz. Mismo criterio que Equix/EliteBooker.
   base: command === 'build' ? '/quiniela/' : '/',
   plugins: [react()],
+  // El valor por defecto de Vite 8 (baseline-widely-available) deja fuera
+  // móviles/WebViews antiguos: el bundle no se interpreta y la app sale en
+  // blanco. ES2018 ≈ Chrome 64 / Safari 12 / Firefox 58.
+  build: { target: 'es2018' },
 }))

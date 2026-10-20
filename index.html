@@ -28,6 +28,85 @@
         }
       })(window.location);
     </script>
+    <!--
+      Guardián de arranque (ES5 a propósito: debe poder ejecutarse en navegadores
+      que no entienden el bundle). Sin él, un fallo al cargar/interpretar la app
+      deja la página en blanco sin explicación:
+      - error al cargar un asset (caché de index.html obsoleta tras un
+        despliegue): recarga una sola vez para traer la versión nueva;
+      - cualquier otro error antes de que React monte, o app que no monta en
+        8 s: muestra un mensaje legible con el detalle técnico.
+    -->
+    <script type="text/javascript">
+      (function () {
+        var lastError = '';
+        function mounted() {
+          var r = document.getElementById('root');
+          return !r || r.childNodes.length > 0;
+        }
+        function show(extra) {
+          var r = document.getElementById('root');
+          if (!r || r.childNodes.length > 0) return;
+          var box = document.createElement('div');
+          box.style.cssText = 'padding:2rem 1rem;font-family:sans-serif;line-height:1.4;word-break:break-word';
+          box.innerHTML =
+            '<p style="font-weight:700">No se ha podido cargar la Quiniela.</p>' +
+            '<p>Prueba a recargar. Si tu móvil o navegador es antiguo, actualízalo o abre el enlace con Chrome/Firefox actualizados. ' +
+            'Si sigue igual, envía una captura de este mensaje.</p>' +
+            '<p style="font-size:12px;opacity:.7"></p>' +
+            '<button type="button" style="padding:.5rem 1rem" onclick="location.reload()">Recargar</button>';
+          box.getElementsByTagName('p')[2].appendChild(
+            document.createTextNode((extra || lastError || 'sin detalle') + ' | ' + navigator.userAgent)
+          );
+          r.appendChild(box);
+        }
+        window.addEventListener(
+          'error',
+          function (e) {
+            var t = e.target;
+            if (t && t !== window) {
+              // Error de carga de un recurso. Solo importan scripts y CSS; un escudo
+              // (img) que no carga no debe disparar nada.
+              if (t.tagName === 'SCRIPT' || t.tagName === 'LINK') {
+                lastError = 'No se pudo cargar ' + (t.src || t.href);
+                try {
+                  if (!sessionStorage.getItem('quiniela_reloaded')) {
+                    sessionStorage.setItem('quiniela_reloaded', '1');
+                    location.reload();
+                    return;
+                  }
+                } catch (err) {}
+                show();
+              }
+              return;
+            }
+            lastError = (e.message || 'Error') + (e.filename ? ' (' + e.filename + ':' + e.lineno + ')' : '');
+            window.setTimeout(function () {
+              if (!mounted()) show();
+            }, 0);
+          },
+          true
+        );
+        window.addEventListener('unhandledrejection', function (e) {
+          lastError = 'Promesa rechazada: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+        });
+        window.setTimeout(function () {
+          if (!mounted()) {
+            show('La app no arrancó en 8 s. ' + lastError);
+            return;
+          }
+          try {
+            sessionStorage.removeItem('quiniela_reloaded');
+          } catch (err) {}
+        }, 8000);
+      })();
+    </script>
+    <script nomodule>
+      window.setTimeout(function () {
+        var r = document.getElementById('root');
+        if (r) r.innerHTML = '<p style="padding:2rem 1rem;font-family:sans-serif">Tu navegador es demasiado antiguo para esta aplicación. Actualízalo o abre el enlace con Chrome/Firefox actualizados.</p>';
+      }, 0);
+    </script>
   </head>
   <body>
     <div id="root"></div>
