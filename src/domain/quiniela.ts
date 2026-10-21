@@ -188,6 +188,36 @@ export function computeClasificacion(
   return rows;
 }
 
+export interface GanadoresJornada {
+  aciertos: number;
+  /** Todos los que empatan en el máximo de aciertos (misma regla que la clasificación). */
+  playerIds: string[];
+}
+
+/** Quién ganó cada jornada: los jugadores con más aciertos (varios si hay empate). */
+export function computeGanadoresPorJornada(
+  jornadas: Jornada[],
+  columnas: Columna[],
+  partidos: Partido[],
+): Map<string, GanadoresJornada> {
+  const resultado = new Map<string, GanadoresJornada>();
+  for (const jornada of jornadas) {
+    const partidosJornada = partidos.filter((p) => p.jornadaId === jornada.id);
+    const columnasJornada = columnas.filter((c) => c.jornadaId === jornada.id);
+    if (columnasJornada.length === 0) continue;
+    const aciertos = columnasJornada.map((columna) => ({
+      playerId: columna.playerId,
+      aciertos: contarAciertos(columna, partidosJornada),
+    }));
+    const max = Math.max(...aciertos.map((a) => a.aciertos));
+    resultado.set(jornada.id, {
+      aciertos: max,
+      playerIds: aciertos.filter((a) => a.aciertos === max).map((a) => a.playerId),
+    });
+  }
+  return resultado;
+}
+
 /** Nº de jornadas pagadas por cada jugador (cuenta sobre todas las jornadas, jugadas o no). */
 export function computeJornadasPagadasPorJugador(jornadas: Jornada[]): Map<string, number> {
   const resultado = new Map<string, number>();
@@ -198,26 +228,3 @@ export function computeJornadasPagadasPorJugador(jornadas: Jornada[]): Map<strin
   return resultado;
 }
 
-/** Máximo de aciertos conseguido en cada jornada (para el listado del histórico). */
-export function computeMaxAciertosPorJornada(
-  jornadas: Jornada[],
-  columnas: Columna[],
-  partidos: Partido[],
-): Map<string, number> {
-  const partidosPorJornada = new Map<string, Partido[]>();
-  for (const partido of partidos) {
-    const lista = partidosPorJornada.get(partido.jornadaId) ?? [];
-    lista.push(partido);
-    partidosPorJornada.set(partido.jornadaId, lista);
-  }
-
-  const resultado = new Map<string, number>();
-  for (const jornada of jornadas) {
-    const partidosJornada = partidosPorJornada.get(jornada.id) ?? [];
-    const columnasJornada = columnas.filter((c) => c.jornadaId === jornada.id);
-    if (columnasJornada.length === 0) continue;
-    const max = Math.max(...columnasJornada.map((c) => contarAciertos(c, partidosJornada)));
-    resultado.set(jornada.id, max);
-  }
-  return resultado;
-}

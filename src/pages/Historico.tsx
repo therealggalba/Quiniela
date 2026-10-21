@@ -13,7 +13,7 @@ export function Historico() {
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [columnas, setColumnas] = useState<Columna[]>([]);
   const [loading, setLoading] = useState(true);
-  const { posiciones, maxAciertosPorJornada } = useClasificacionPositions(players, jornadasCerradas);
+  const { posiciones, ganadoresPorJornada } = useClasificacionPositions(players, jornadasCerradas);
 
   useEffect(() => {
     async function load() {
@@ -49,8 +49,8 @@ export function Historico() {
   if (seleccionada) {
     const jugadoresJornada = players.filter((p) => columnas.some((c) => c.playerId === p.id));
     return (
-      <div>
-        <div className="page" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', paddingBottom: 0 }}>
+      <div className="screen">
+        <div className="page screen__title">
           <button type="button" className="btn" onClick={() => setSeleccionada(null)}>
             ← Volver
           </button>
@@ -74,18 +74,27 @@ export function Historico() {
         <div className="empty-state">Todavía no hay jornadas cerradas.</div>
       ) : (
         jornadasCerradas.map((jornada) => {
-          const max = maxAciertosPorJornada.get(jornada.id);
+          const ganadores = ganadoresPorJornada.get(jornada.id);
+          const nombres = ganadores
+            ? ganadores.playerIds.map((id) => players.find((p) => p.id === id)?.name).filter(Boolean)
+            : [];
           return (
             <button
               key={jornada.id}
               type="button"
-              className="list-item"
-              style={{ width: '100%', border: '1px solid var(--border)', cursor: 'pointer' }}
+              className="list-item list-item--button"
               onClick={() => setSeleccionada(jornada)}
             >
-              <span>Jornada {jornada.numero}</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {max !== undefined && <span className="qt-stat-pill qt-stat-pill--aciertos">{max} aciertos</span>}
+              <span className="list-item__main">
+                <span>Jornada {jornada.numero}</span>
+                {nombres.length > 0 && (
+                  <span className="list-item__winner">
+                    {nombres.length > 1 ? 'Ganaron' : 'Ganó'} {nombres.join(' · ')}
+                  </span>
+                )}
+              </span>
+              <span className="list-item__meta">
+                {ganadores && <span className="qt-stat-pill qt-stat-pill--aciertos">{ganadores.aciertos} aciertos</span>}
                 <span className="badge-estado cerrada">cerrada</span>
               </span>
             </button>

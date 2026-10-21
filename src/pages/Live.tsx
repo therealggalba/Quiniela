@@ -78,8 +78,8 @@ export function Live() {
   const jugadoresJornada = players.filter((p) => columnas.some((c) => c.playerId === p.id));
 
   return (
-    <div>
-      <div className="page" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: 0 }}>
+    <div className="screen">
+      <div className="page screen__title">
         <h2 style={{ margin: 0, fontSize: '1rem' }}>Jornada {jornada.numero}</h2>
         <span className={`badge-estado ${jornada.estado}`}>{jornada.estado.replace('_', ' ')}</span>
       </div>

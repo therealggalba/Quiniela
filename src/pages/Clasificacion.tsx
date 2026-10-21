@@ -29,7 +29,7 @@ export function Clasificacion() {
   }
 
   return (
-    <div className="page">
+    <div className="page page--clasificacion">
       <table className="tabla-clasificacion">
         <thead>
           <tr>
@@ -41,10 +41,12 @@ export function Clasificacion() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
+          {rows.map((row, index) => {
             const pagadas = jornadasPagadas.get(row.playerId) ?? 0;
+            const rowClass =
+              index === 0 ? 'fila-lider' : index === rows.length - 1 ? 'fila-farolillo' : undefined;
             return (
-              <tr key={row.playerId}>
+              <tr key={row.playerId} className={rowClass}>
                 <td>{row.position}</td>
                 <td>
                   {row.name}
@@ -64,6 +66,9 @@ export function Clasificacion() {
           })}
         </tbody>
       </table>
+      <p className="clasificacion-footer">
+        Por decidir: si habrá premio para el ganador y castigo para el último clasificado (en igualdad de jornadas).
+      </p>
     </div>
   );
 }

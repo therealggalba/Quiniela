@@ -2,17 +2,17 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 0;
+  padding-top: env(safe-area-inset-top, 0);
 }
 
 .app-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
   background: var(--bg);
   z-index: 5;
 }
@@ -61,18 +61,42 @@
   justify-content: center;
 }
 
+/* El contenido ocupa exactamente el hueco entre cabecera y barra inferior.
+   La tabla de la quiniela se ajusta a él (filas elásticas), así que no hace
+   falta scroll; las pantallas largas (admin) sí pueden desplazarse dentro. */
 .app-main {
-  flex: 1;
-  padding-bottom: 4.5rem;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.screen {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen__title {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.35rem;
+}
+
+.screen__title h2 {
+  margin: 0;
+  font-size: 1rem;
 }
 
 /* Bottom nav */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex: 0 0 auto;
   display: flex;
   border-top: 1px solid var(--border);
   background: var(--surface);
@@ -86,7 +110,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.55rem 0 0.5rem;
+  padding: 0.45rem 0 0.4rem;
   text-decoration: none;
   color: var(--text-dim);
   font-size: 0.72rem;
@@ -107,9 +131,9 @@
    siempre alineados, sea cual sea la longitud del nombre del equipo.
    Pensada para minimizar el scroll: filas compactas, cabecera mínima. */
 :root {
-  --qt-row-height: 2.3rem;
+  --qt-row-max: 2.8rem;
   --qt-picks-width: min(8.5rem, 36vw);
-  --qt-head-height: 5.2rem;
+  --qt-head-height: 5.4rem;
   --comp-laliga: #ff7a1a;
   --comp-segunda: #2f9bbf;
   --comp-ligaf: #c23bde;
@@ -117,12 +141,15 @@
 }
 
 .qt {
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
 .qt-head-spacer,
 .qt-pick-head {
+  flex: 0 0 var(--qt-head-height);
   height: var(--qt-head-height);
   border-bottom: 1px solid var(--border);
   box-sizing: border-box;
@@ -171,12 +198,25 @@
   background: var(--accent-dim);
 }
 
+/* En la cabecera de cada columna los aciertos y la posición se leen primero. */
+.qt-pick-head .qt-stat-pill--aciertos {
+  font-size: 0.82rem;
+  padding: 0.15rem 0.5rem;
+}
+
 .qt-stat-pill--posicion {
   color: #f5c518;
   background: rgba(245, 197, 24, 0.16);
 }
 
+.qt-pick-head .qt-stat-pill--posicion {
+  font-size: 0.9rem;
+  padding: 0.15rem 0.55rem;
+}
+
 .qt__body {
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   align-items: stretch;
 }
@@ -184,10 +224,13 @@
 .qt__matches {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .qt__picks {
   flex: 0 0 var(--qt-picks-width);
+  min-height: 0;
   width: var(--qt-picks-width);
   display: flex;
   overflow-x: auto;
@@ -204,11 +247,18 @@
   flex: 0 0 100%;
   width: 100%;
   scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Filas elásticas: reparten la altura disponible a partes iguales (con un
+   máximo para que pocas filas no queden enormes). Ambos lados tienen el mismo
+   nº de filas y la misma altura, así que siguen alineados. */
 .qt-match-cell,
 .qt-pick-cell {
-  height: var(--qt-row-height);
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: var(--qt-row-max);
   border-bottom: 1px solid var(--border);
   box-sizing: border-box;
 }
@@ -310,10 +360,11 @@
 }
 
 .carousel-dots {
+  flex: 0 0 auto;
   display: flex;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.5rem 0 0.6rem;
+  padding: 0.4rem 0 0.45rem;
 }
 
 .carousel-dots span {
@@ -330,7 +381,8 @@
 .pick-badge {
   flex: 0 0 auto;
   width: 2.1rem;
-  height: 2.1rem;
+  height: calc(100% - 6px);
+  max-height: 2.1rem;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -387,6 +439,32 @@
   color: var(--text);
 }
 
+.list-item--button {
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.list-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.list-item__winner {
+  font-size: 0.78rem;
+  color: #f5c518;
+}
+
+.list-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
 .badge-estado {
   font-size: 0.65rem;
   text-transform: uppercase;
@@ -425,9 +503,31 @@
   text-align: left;
 }
 
-.tabla-clasificacion tbody tr:first-child td {
-  color: var(--accent);
+/* Líder en tono dorado suave, último clasificado en rojo suave. */
+.tabla-clasificacion .fila-lider td {
+  background: rgba(245, 197, 24, 0.11);
+  color: #f5d76e;
   font-weight: 700;
+}
+
+.tabla-clasificacion .fila-farolillo td {
+  background: rgba(229, 72, 77, 0.11);
+  color: #ee8083;
+}
+
+.page--clasificacion {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.clasificacion-footer {
+  margin: auto 0 0;
+  padding-top: 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--text-dim);
 }
 
 /* Puntitos de jornadas pagadas, junto al nombre en la Clasificación */

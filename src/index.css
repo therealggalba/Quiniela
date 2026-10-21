@@ -42,8 +42,19 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Altura exacta de la pantalla (dvh = descontando las barras del navegador
+   móvil): el body nunca desborda, así no hay scroll vertical de página. */
+html,
+body,
 #root {
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
 }

@@ -138,7 +138,7 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
                     <span className="qt-stat-pill qt-stat-pill--aciertos">
                       {aciertos}/{resueltos} aciertos
                     </span>
-                    {posicion && <span className="qt-stat-pill qt-stat-pill--posicion">{posicion}º gral.</span>}
+                    {posicion && <span className="qt-stat-pill qt-stat-pill--posicion">{posicion}º</span>}
                   </div>
                 </div>
                 {partidosNormales.map((partido) => {
