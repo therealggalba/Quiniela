@@ -17,19 +17,55 @@ interface Props {
  * Tabla estilo hoja de cálculo: la columna de partidos es fija (misma para
  * todos, no se mueve) y a su derecha se desliza, de una en una, la columna
  * de pronósticos de cada jugador (orden alfabético). Cada fila mide lo
- * mismo en ambos lados para que siempre queden alineadas, sin importar la
- * longitud del nombre del equipo. Pensada para caber en pantalla con el
- * mínimo scroll posible: partidos a una sola línea, hora omitida.
+ * mismo en ambos lados para que siempre queden alineadas.
  *
- * La cabecera del jugador (nombre, aciertos, posición) forma parte de SU
- * columna y se desplaza con ella: no depende de calcular qué columna está a
- * la vista, así que nunca puede mostrar el nombre de otro jugador.
+ * Cada "página" del carrusel ocupa TODO el ancho de la tabla: arriba la
+ * cabecera del jugador (nombre, aciertos, posición) a lo ancho, debajo sus
+ * pronósticos alineados a la derecha. La columna de partidos es una capa
+ * encima (sin eventos de puntero, el swipe pasa a través) que tapa la parte
+ * izquierda de la página. Como la cabecera es parte de la página, se
+ * desplaza con ella y nunca puede mostrar el nombre de otro jugador.
  *
  * Los partidos de Pleno al 15 (puede haber varios: mismo enfrentamiento
  * real duplicado, un resultado 0/1/2/M independiente cada uno) se funden
  * aquí en una única fila con todos sus resultados juntos, para no repetir
  * el mismo partido varias veces en pantalla.
  */
+/** Una fila de la parte fija: escudo y nombre local · goles - goles · nombre y escudo visitante. */
+function MatchRow({ partido, pleno = false }: { partido: Partido; pleno?: boolean }) {
+  const jugado = partido.estado !== 'programado';
+  const enJuego = partido.estado === 'en_juego';
+  const nombre = `${partido.equipoLocal} – ${partido.equipoVisitante}`;
+  return (
+    <div
+      className={`qt-match-cell qt-match-cell--${pleno ? 'pleno' : partido.competicion}`}
+      title={nombre}
+      aria-label={nombre}
+    >
+      <span className="qt-team qt-team--local">
+        <TeamBadge competicion={partido.competicion} team={partido.equipoLocal} />
+        <span className="qt-team__name">{shortTeamName(partido.equipoLocal)}</span>
+      </span>
+      <span className={`qt-score ${enJuego ? 'live' : ''} ${jugado ? '' : 'qt-score--pending'}`}>
+        {jugado ? (
+          <>
+            <span className="qt-score__g qt-score__g--local">{partido.golesLocal ?? '-'}</span>
+            <span className="qt-score__sep">-</span>
+            <span className="qt-score__g qt-score__g--visitante">{partido.golesVisitante ?? '-'}</span>
+          </>
+        ) : (
+          'vs'
+        )}
+        {enJuego && <span className="live-dot" />}
+      </span>
+      <span className="qt-team qt-team--visitante">
+        <span className="qt-team__name">{shortTeamName(partido.equipoVisitante)}</span>
+        <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
+      </span>
+    </div>
+  );
+}
+
 export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, onToggleFavorite, posiciones }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -82,38 +118,6 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
   return (
     <div className="qt">
       <div className="qt__body">
-        <div className="qt__matches">
-          <div className="qt-head-spacer" aria-hidden="true" />
-          {partidosNormales.map((partido) => (
-            <div key={partido.id} className={`qt-match-cell qt-match-cell--${partido.competicion}`}>
-              <TeamBadge competicion={partido.competicion} team={partido.equipoLocal} />
-              <span className="qt-match-cell__names" title={`${partido.equipoLocal} – ${partido.equipoVisitante}`}>
-                {shortTeamName(partido.equipoLocal)} – {shortTeamName(partido.equipoVisitante)}
-              </span>
-              <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
-              <span className={`qt-match-cell__marcador ${partido.estado === 'en_juego' ? 'live' : ''}`}>
-                {partido.estado === 'en_juego' && <span className="live-dot" />}
-                {partido.estado === 'programado' ? '–' : `${partido.golesLocal ?? '-'}-${partido.golesVisitante ?? '-'}`}
-              </span>
-            </div>
-          ))}
-
-          {plenoRef && (
-            <div className="qt-match-cell qt-match-cell--pleno">
-              <TeamBadge competicion={plenoRef.competicion} team={plenoRef.equipoLocal} />
-              <span className="qt-match-cell__names" title={`${plenoRef.equipoLocal} – ${plenoRef.equipoVisitante}`}>
-                {shortTeamName(plenoRef.equipoLocal)} – {shortTeamName(plenoRef.equipoVisitante)}
-              </span>
-              <TeamBadge competicion={plenoRef.competicion} team={plenoRef.equipoVisitante} />
-              {/* Resultado REAL del partido (igual que cualquier otro), no la porra — esa va en la columna de cada jugador. */}
-              <span className={`qt-match-cell__marcador ${plenoRef.estado === 'en_juego' ? 'live' : ''}`}>
-                {plenoRef.estado === 'en_juego' && <span className="live-dot" />}
-                {plenoRef.estado === 'programado' ? '–' : `${plenoRef.golesLocal ?? '-'}-${plenoRef.golesVisitante ?? '-'}`}
-              </span>
-            </div>
-          )}
-        </div>
-
         <div className="qt__picks" ref={scrollRef} onScroll={handleScroll}>
           {players.map((player) => {
             const columna = columnas.find((c) => c.playerId === player.id);
@@ -141,29 +145,39 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
                     {posicion && <span className="qt-stat-pill qt-stat-pill--posicion">{posicion}º</span>}
                   </div>
                 </div>
-                {partidosNormales.map((partido) => {
-                  const pick = columna?.picks[partido.id];
-                  const acierto = resultadoPick(partido, pick);
-                  const badgeClass = acierto === true ? 'hit' : acierto === false ? 'miss' : '';
-                  return (
-                    <div key={partido.id} className="qt-pick-cell">
-                      <span className={`pick-badge ${badgeClass}`}>{pick ?? '–'}</span>
+                <div className="qt-picks-rows">
+                  {partidosNormales.map((partido) => {
+                    const pick = columna?.picks[partido.id];
+                    const acierto = resultadoPick(partido, pick);
+                    const badgeClass = acierto === true ? 'hit' : acierto === false ? 'miss' : '';
+                    return (
+                      <div key={partido.id} className="qt-pick-cell">
+                        <span className={`pick-badge ${badgeClass}`}>{pick ?? '–'}</span>
+                      </div>
+                    );
+                  })}
+                  {plenoRef && (
+                    <div className="qt-pick-cell">
+                      {/* La porra del Pleno al 15 es la misma para todos (no es un pronóstico
+                          individual), pero se muestra aquí, en la columna de cada jugador —
+                          no en la parte fija de partidos, que es solo para el resultado real. */}
+                      <span className="pick-badge pick-badge--score">
+                        {partidosPlenos.map((p) => `${p.plenoAl15Local ?? '?'}-${p.plenoAl15Visitante ?? '?'}`).join(' · ')}
+                      </span>
                     </div>
-                  );
-                })}
-                {plenoRef && (
-                  <div className="qt-pick-cell">
-                    {/* La porra del Pleno al 15 es la misma para todos (no es un pronóstico
-                        individual), pero se muestra aquí, en la columna de cada jugador —
-                        no en la parte fija de partidos, que es solo para el resultado real. */}
-                    <span className="pick-badge pick-badge--score">
-                      {partidosPlenos.map((p) => `${p.plenoAl15Local ?? '?'}-${p.plenoAl15Visitante ?? '?'}`).join(' · ')}
-                    </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}
+        </div>
+
+        <div className="qt__matches">
+          {partidosNormales.map((partido) => (
+            <MatchRow key={partido.id} partido={partido} />
+          ))}
+          {/* Resultado REAL del partido (igual que cualquier otro), no la porra — esa va en la columna de cada jugador. */}
+          {plenoRef && <MatchRow partido={plenoRef} pleno />}
         </div>
       </div>
 

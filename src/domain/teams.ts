@@ -28,7 +28,7 @@ const LALIGA_TEAMS: TeamInfo[] = [
   { name: 'Levante UD', shortCode: 'LEV', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/xwtxsx1473503739.png' },
   { name: 'Elche CF', shortCode: 'ELC', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/e4vaw51655594332.png' },
   { name: 'Racing de Santander', shortCode: 'RAC', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/97kkiq1536575158.png' },
-  { name: 'Deportivo de La Coruña', shortCode: 'DEP', crestUrl: 'https://www.thesportsdb.com/images/media/team/badge/js3j841783013173.png' },
+  { name: 'Deportivo de La Coruña', shortCode: 'DEP', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/js3j841783013173.png' },
   { name: 'Málaga CF', shortCode: 'MAL', crestUrl: 'https://r2.thesportsdb.com/images/media/team/badge/upqyvr1473502952.png' },
 ];
 
@@ -96,20 +96,57 @@ export function findTeam(competicion: Competicion, name: string): TeamInfo | und
   return TEAMS_BY_COMPETICION[competicion].find((t) => t.name === name);
 }
 
-// Nombres cortos solo para mostrar en la tabla (móvil: "Local – Visitante" cabe
-// en una línea). El nombre completo sigue siendo el que se guarda y se elige.
+// Nombre común (una sola palabra siempre que sea posible) solo para mostrar en
+// la tabla: así "Local – Visitante" cabe en una línea y no se corta. El nombre
+// completo sigue siendo el que se guarda y se elige. Real Madrid se mantiene
+// entero para no confundirlo con el Madrid CFF de Liga F.
 const SHORT_NAME_OVERRIDES: Record<string, string> = {
+  // LaLiga
+  'FC Barcelona': 'Barcelona',
   'Atlético de Madrid': 'Atlético',
-  'Deportivo de La Coruña': 'Deportivo',
-  'Deportivo Abanca': 'Deportivo',
-  'Deportivo Alavés': 'Alavés',
-  'Racing de Santander': 'Racing',
-  'Real Sporting de Gijón': 'Sporting',
-  'Albacete Balompié': 'Albacete',
   'Athletic Club': 'Athletic',
+  'Villarreal CF': 'Villarreal',
+  'Real Sociedad': 'Sociedad',
+  'RC Celta': 'Celta',
+  'CA Osasuna': 'Osasuna',
+  'Getafe CF': 'Getafe',
+  'Sevilla FC': 'Sevilla',
+  'Valencia CF': 'Valencia',
+  'Deportivo Alavés': 'Alavés',
+  'RCD Espanyol': 'Espanyol',
+  'Levante UD': 'Levante',
+  'Elche CF': 'Elche',
+  'Racing de Santander': 'Racing',
+  'Deportivo de La Coruña': 'Deportivo',
+  'Málaga CF': 'Málaga',
+  'Rayo Vallecano': 'Rayo',
+  // Segunda
+  'Albacete Balompié': 'Albacete',
+  'UD Almería': 'Almería',
+  'FC Andorra': 'Andorra',
+  'Burgos CF': 'Burgos',
+  'Cádiz CF': 'Cádiz',
+  'CD Castellón': 'Castellón',
+  'RC Celta Fortuna': 'Celta B',
+  'AD Ceuta FC': 'Ceuta',
+  'Córdoba CF': 'Córdoba',
+  'SD Eibar': 'Eibar',
+  'CD Eldense': 'Eldense',
+  'Girona FC': 'Girona',
+  'Granada CF': 'Granada',
+  'UD Las Palmas': 'Las Palmas',
+  'CD Leganés': 'Leganés',
+  'RCD Mallorca': 'Mallorca',
+  'Real Sociedad B': 'Sociedad B',
+  'Real Oviedo': 'Oviedo',
   'Real Valladolid CF': 'Valladolid',
-  'Real Sociedad B': 'Real Sociedad B',
-  'RC Celta Fortuna': 'Celta Fortuna',
+  'CE Sabadell FC': 'Sabadell',
+  'Real Sporting de Gijón': 'Sporting',
+  'CD Tenerife': 'Tenerife',
+  // Liga F
+  'Badalona Women': 'Badalona',
+  'Deportivo Abanca': 'Deportivo',
+  'Logroño United': 'Logroño',
 };
 
 export function shortTeamName(name: string): string {

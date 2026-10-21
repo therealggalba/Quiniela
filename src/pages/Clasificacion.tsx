@@ -66,9 +66,19 @@ export function Clasificacion() {
           })}
         </tbody>
       </table>
-      <p className="clasificacion-footer">
-        Por decidir: si habrá premio para el ganador y castigo para el último clasificado (en igualdad de jornadas).
-      </p>
+      <section className="por-decidir" aria-labelledby="por-decidir-title">
+        <h2 id="por-decidir-title">Puntos a debatir</h2>
+        <ol>
+          <li>
+            <strong>Premio y castigo.</strong> ¿Premio para el ganador (jornadas igualadas) y castigo para el último
+            clasificado?
+          </li>
+          <li>
+            <strong>Reparto del dinero.</strong> Si se gana un dinero importante, ¿se reparte entre los 10 participantes
+            o se lo queda solo el acertante? Mejor dejarlo claro antes de que pueda ocurrir.
+          </li>
+        </ol>
+      </section>
     </div>
   );
 }
