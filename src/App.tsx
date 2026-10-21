@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import { BottomNav } from './components/BottomNav';
-import { LockIcon } from './components/icons';
+import { InfoIcon, LockIcon } from './components/icons';
+import { InfoModal } from './components/InfoModal';
 import { AdminPage } from './pages/AdminPage';
 import { Clasificacion } from './pages/Clasificacion';
 import { Historico } from './pages/Historico';
@@ -20,11 +22,17 @@ const basename = import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.
 function Shell() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  const [infoOpen, setInfoOpen] = useState(false);
 
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1>Quiniela</h1>
+        <div className="app-header__title">
+          <h1>Quiniela</h1>
+          <button type="button" className="info-btn" onClick={() => setInfoOpen(true)} aria-label="Información de la quiniela">
+            <InfoIcon />
+          </button>
+        </div>
         {!isAdmin && (
           <Link to="/admin" className="admin-entry" aria-label="Modo edición">
             <LockIcon />
@@ -40,6 +48,7 @@ function Shell() {
         </Routes>
       </main>
       {!isAdmin && <BottomNav />}
+      {infoOpen && <InfoModal onClose={() => setInfoOpen(false)} />}
     </div>
   );
 }

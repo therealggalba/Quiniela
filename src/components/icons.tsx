@@ -42,3 +42,14 @@ export function LockIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Icono sobrio y monocromo de información (círculo con "i"). */
+export function InfoIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.3" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="10" cy="6.5" r="0.95" fill="currentColor" />
+      <path d="M10 9.2v4.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -113,6 +113,9 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
   const partidosNormales = partidos.filter((p) => !p.esPlenoAl15);
   const partidosPlenos = partidos.filter((p) => p.esPlenoAl15);
   const plenoRef = partidosPlenos[0];
+  const porraPleno = partidosPlenos
+    .map((p) => `${p.plenoAl15Local ?? '?'}-${p.plenoAl15Visitante ?? '?'}`)
+    .join(' · ');
   const resueltos = partidosNormales.filter((p) => p.estado === 'finalizado').length;
 
   return (
@@ -156,16 +159,9 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
                       </div>
                     );
                   })}
-                  {plenoRef && (
-                    <div className="qt-pick-cell">
-                      {/* La porra del Pleno al 15 es la misma para todos (no es un pronóstico
-                          individual), pero se muestra aquí, en la columna de cada jugador —
-                          no en la parte fija de partidos, que es solo para el resultado real. */}
-                      <span className="pick-badge pick-badge--score">
-                        {partidosPlenos.map((p) => `${p.plenoAl15Local ?? '?'}-${p.plenoAl15Visitante ?? '?'}`).join(' · ')}
-                      </span>
-                    </div>
-                  )}
+                  {/* Hueco que mantiene la fila del Pleno alineada: su contenido (resultado y
+                      porra) es igual para todos y va fijo en la capa de partidos. */}
+                  {plenoRef && <div className="qt-pick-cell" aria-hidden="true" />}
                 </div>
               </div>
             );
@@ -176,8 +172,17 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
           {partidosNormales.map((partido) => (
             <MatchRow key={partido.id} partido={partido} />
           ))}
-          {/* Resultado REAL del partido (igual que cualquier otro), no la porra — esa va en la columna de cada jugador. */}
-          {plenoRef && <MatchRow partido={plenoRef} pleno />}
+          {/* Pleno al 15: resultado REAL a la izquierda (como cualquier partido) y, a la
+              derecha, la porra, que es la misma para todos (no un pronóstico individual),
+              así que va fija y no rota con las columnas de los jugadores. */}
+          {plenoRef && (
+            <div className="qt-row qt-row--pleno">
+              <MatchRow partido={plenoRef} pleno />
+              <div className="qt-pleno-porra">
+                <span className="pick-badge pick-badge--score">{porraPleno}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
