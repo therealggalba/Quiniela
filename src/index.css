@@ -19,20 +19,18 @@
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f5f6f8;
-    --surface: #ffffff;
-    --surface-2: #eef0f3;
-    --border: #dfe2e7;
-    --text: #14161a;
-    --text-dim: #5b616b;
-    color-scheme: light;
-  }
-}
-
 * {
   box-sizing: border-box;
+}
+
+/* Tema oscuro siempre (los móviles en modo claro lo veían blanco). El tamaño de
+   letra del sistema se limita a 16px: si no, las medidas en rem se agrandan y la
+   tabla se descuadra y trunca los nombres. */
+html {
+  font-size: 100%;
+  font-size: min(100%, 16px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 html,

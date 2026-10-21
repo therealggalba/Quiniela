@@ -108,7 +108,8 @@
    Pensada para minimizar el scroll: filas compactas, cabecera mínima. */
 :root {
   --qt-row-height: 2.3rem;
-  --qt-picks-width: 8.5rem;
+  --qt-picks-width: min(8.5rem, 36vw);
+  --qt-head-height: 5.2rem;
   --comp-laliga: #ff7a1a;
   --comp-segunda: #2f9bbf;
   --comp-ligaf: #c23bde;
@@ -120,27 +121,21 @@
   flex-direction: column;
 }
 
-.qt__header {
-  display: flex;
-  align-items: stretch;
+.qt-head-spacer,
+.qt-pick-head {
+  height: var(--qt-head-height);
   border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
 }
 
-.qt__header-matches {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.qt__header-player {
-  flex: 0 0 var(--qt-picks-width);
-  width: var(--qt-picks-width);
-  border-left: 1px solid var(--border);
+.qt-pick-head {
   padding: 0.4rem 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
+  overflow: hidden;
   background: var(--surface);
 }
 

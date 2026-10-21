@@ -95,3 +95,29 @@ export const TEAMS_BY_COMPETICION: Record<Competicion, TeamInfo[]> = {
 export function findTeam(competicion: Competicion, name: string): TeamInfo | undefined {
   return TEAMS_BY_COMPETICION[competicion].find((t) => t.name === name);
 }
+
+// Nombres cortos solo para mostrar en la tabla (móvil: "Local – Visitante" cabe
+// en una línea). El nombre completo sigue siendo el que se guarda y se elige.
+const SHORT_NAME_OVERRIDES: Record<string, string> = {
+  'Atlético de Madrid': 'Atlético',
+  'Deportivo de La Coruña': 'Deportivo',
+  'Deportivo Abanca': 'Deportivo',
+  'Deportivo Alavés': 'Alavés',
+  'Racing de Santander': 'Racing',
+  'Real Sporting de Gijón': 'Sporting',
+  'Albacete Balompié': 'Albacete',
+  'Athletic Club': 'Athletic',
+  'Real Valladolid CF': 'Valladolid',
+  'Real Sociedad B': 'Real Sociedad B',
+  'RC Celta Fortuna': 'Celta Fortuna',
+};
+
+export function shortTeamName(name: string): string {
+  const override = SHORT_NAME_OVERRIDES[name];
+  if (override) return override;
+  const stripped = name
+    .replace(/^(RCD|RC|CD|UD|SD|CA|AD|CE|FC) /, '')
+    .replace(/ (CF|FC|UD|CD|SD)$/, '')
+    .trim();
+  return stripped || name;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { contarAciertos, resultadoPick, type Columna, type Partido, type Player } from '../domain/quiniela';
+import { shortTeamName } from '../domain/teams';
 import { TeamBadge } from './TeamBadge';
 
 interface Props {
@@ -20,6 +21,10 @@ interface Props {
  * longitud del nombre del equipo. Pensada para caber en pantalla con el
  * mínimo scroll posible: partidos a una sola línea, hora omitida.
  *
+ * La cabecera del jugador (nombre, aciertos, posición) forma parte de SU
+ * columna y se desplaza con ella: no depende de calcular qué columna está a
+ * la vista, así que nunca puede mostrar el nombre de otro jugador.
+ *
  * Los partidos de Pleno al 15 (puede haber varios: mismo enfrentamiento
  * real duplicado, un resultado 0/1/2/M independiente cada uno) se funden
  * aquí en una única fila con todos sus resultados juntos, para no repetir
@@ -35,18 +40,31 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
     const index = players.findIndex((p) => p.id === favoritePlayerId);
     if (index < 0) return;
     const container = scrollRef.current;
-    if (container) {
-      container.scrollLeft = index * container.clientWidth;
+    const firstPage = container?.firstElementChild as HTMLElement | null;
+    if (container && firstPage) {
+      container.scrollLeft = index * firstPage.getBoundingClientRect().width;
       setActiveIndex(index);
       scrolledToFavorite.current = true;
     }
   }, [favoritePlayerId, players]);
 
+  // Solo alimenta los puntitos indicadores; la cabecera ya no depende de esto.
   function handleScroll() {
     const container = scrollRef.current;
-    if (!container || container.clientWidth === 0) return;
-    const index = Math.round(container.scrollLeft / container.clientWidth);
-    setActiveIndex(Math.max(0, Math.min(players.length - 1, index)));
+    if (!container) return;
+    const c = container.getBoundingClientRect();
+    const centro = c.left + c.width / 2;
+    let mejor = 0;
+    let mejorDist = Infinity;
+    Array.from(container.children).forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      const dist = Math.abs(r.left + r.width / 2 - centro);
+      if (dist < mejorDist) {
+        mejorDist = dist;
+        mejor = i;
+      }
+    });
+    setActiveIndex(mejor);
   }
 
   if (players.length === 0) {
@@ -59,44 +77,18 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
   const partidosNormales = partidos.filter((p) => !p.esPlenoAl15);
   const partidosPlenos = partidos.filter((p) => p.esPlenoAl15);
   const plenoRef = partidosPlenos[0];
-
-  const currentPlayer = players[activeIndex];
-  const currentColumna = columnas.find((c) => c.playerId === currentPlayer.id);
-  const aciertos = currentColumna ? contarAciertos(currentColumna, partidos) : 0;
   const resueltos = partidosNormales.filter((p) => p.estado === 'finalizado').length;
-  const isFavorite = favoritePlayerId === currentPlayer.id;
-  const posicion = posiciones.get(currentPlayer.id);
 
   return (
     <div className="qt">
-      <div className="qt__header">
-        <div className="qt__header-matches" aria-hidden="true" />
-        <div className="qt__header-player">
-          <div className="qt__player-name">
-            <button
-              type="button"
-              className={`fav-btn ${isFavorite ? 'active' : ''}`}
-              onClick={() => onToggleFavorite(currentPlayer.id)}
-              aria-label={isFavorite ? 'Quitar de favorita' : 'Marcar como favorita'}
-            >
-              {isFavorite ? '★' : '☆'}
-            </button>
-            {currentPlayer.name}
-          </div>
-          <div className="qt__player-stats">
-            <span className="qt-stat-pill qt-stat-pill--aciertos">{aciertos}/{resueltos} aciertos</span>
-            {posicion && <span className="qt-stat-pill qt-stat-pill--posicion">{posicion}º gral.</span>}
-          </div>
-        </div>
-      </div>
-
       <div className="qt__body">
         <div className="qt__matches">
+          <div className="qt-head-spacer" aria-hidden="true" />
           {partidosNormales.map((partido) => (
             <div key={partido.id} className={`qt-match-cell qt-match-cell--${partido.competicion}`}>
               <TeamBadge competicion={partido.competicion} team={partido.equipoLocal} />
-              <span className="qt-match-cell__names">
-                {partido.equipoLocal} – {partido.equipoVisitante}
+              <span className="qt-match-cell__names" title={`${partido.equipoLocal} – ${partido.equipoVisitante}`}>
+                {shortTeamName(partido.equipoLocal)} – {shortTeamName(partido.equipoVisitante)}
               </span>
               <TeamBadge competicion={partido.competicion} team={partido.equipoVisitante} />
               <span className={`qt-match-cell__marcador ${partido.estado === 'en_juego' ? 'live' : ''}`}>
@@ -109,8 +101,8 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
           {plenoRef && (
             <div className="qt-match-cell qt-match-cell--pleno">
               <TeamBadge competicion={plenoRef.competicion} team={plenoRef.equipoLocal} />
-              <span className="qt-match-cell__names">
-                {plenoRef.equipoLocal} – {plenoRef.equipoVisitante}
+              <span className="qt-match-cell__names" title={`${plenoRef.equipoLocal} – ${plenoRef.equipoVisitante}`}>
+                {shortTeamName(plenoRef.equipoLocal)} – {shortTeamName(plenoRef.equipoVisitante)}
               </span>
               <TeamBadge competicion={plenoRef.competicion} team={plenoRef.equipoVisitante} />
               {/* Resultado REAL del partido (igual que cualquier otro), no la porra — esa va en la columna de cada jugador. */}
@@ -125,8 +117,30 @@ export function QuinielaTable({ players, columnas, partidos, favoritePlayerId, o
         <div className="qt__picks" ref={scrollRef} onScroll={handleScroll}>
           {players.map((player) => {
             const columna = columnas.find((c) => c.playerId === player.id);
+            const aciertos = columna ? contarAciertos(columna, partidos) : 0;
+            const posicion = posiciones.get(player.id);
+            const isFavorite = favoritePlayerId === player.id;
             return (
               <div key={player.id} className="qt-picks-page">
+                <div className="qt-pick-head">
+                  <div className="qt__player-name">
+                    <button
+                      type="button"
+                      className={`fav-btn ${isFavorite ? 'active' : ''}`}
+                      onClick={() => onToggleFavorite(player.id)}
+                      aria-label={isFavorite ? 'Quitar de favorita' : 'Marcar como favorita'}
+                    >
+                      {isFavorite ? '★' : '☆'}
+                    </button>
+                    {player.name}
+                  </div>
+                  <div className="qt__player-stats">
+                    <span className="qt-stat-pill qt-stat-pill--aciertos">
+                      {aciertos}/{resueltos} aciertos
+                    </span>
+                    {posicion && <span className="qt-stat-pill qt-stat-pill--posicion">{posicion}º gral.</span>}
+                  </div>
+                </div>
                 {partidosNormales.map((partido) => {
                   const pick = columna?.picks[partido.id];
                   const acierto = resultadoPick(partido, pick);
